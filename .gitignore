@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Generated / heavy artifacts — regenerable, keep out of git
+pipeline/**/output/
+*.ply
+*.obj.mtl
+exports/
+*.blend1
+
+# Node / Python tooling (once the Hive adds it)
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Keep: reference-photos (our own), NOTES, docs, source scripts, generated STLs we own
+!projects/**/reference-photos/**
