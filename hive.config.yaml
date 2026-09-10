@@ -20,7 +20,11 @@ tokens:
   warning_threshold: 0.8
 
 task_tracking:
-  adapter: null   # set to github once a remote is created, matching DT Forge's convention
+  adapter: github
+  team_value: mdostal
+  project_value: model-forge
+  github:
+    token: null
 
 execution:
   default_methodology: classic
