@@ -1,0 +1,76 @@
+id: bracket-gen
+epic: bracket-gen-milestone-1
+title: Parametric OpenSCAD L-bracket template + render wrapper
+status: done
+methodology: classic
+depends_on: []
+
+description: |
+  A parametric OpenSCAD template for L-shaped angle brackets (two 90-degree
+  faces, a countersunk hex-bolt hole on one face, an oblong adjustment slot
+  on the other — matching projects/furniture-brackets/NOTES.md's part
+  description) plus a Node wrapper that shells out to `openscad -D ...` to
+  render it to STL.
+
+acceptance_criteria:
+  - "Given a full parameter set, when render is called, then it invokes openscad with one -D flag per parameter and the correct output path"
+  - "Given a parameter set missing a required field, when render is called, then it fails fast with the missing field named, before ever shelling out"
+  - "Given openscad is not installed, when render is called, then it fails with a clear install instruction, not a generic ENOENT"
+  - "Given the template file is missing, when render is called, then it fails clearly rather than letting openscad produce an opaque error"
+
+steps:
+  - id: research
+    description: Confirm the L-bracket shape from projects/furniture-brackets/NOTES.md and reference photos; decide OpenSCAD vs Onshape FeatureScript (resolved in design-discussion — OpenSCAD, for CI-testability and the open/free constraint).
+    agent: researcher
+  - id: implement
+    description: Write templates/l-bracket.scad and src/render.js (buildArgs + renderBracket + isOpenSCADAvailable).
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Unit test buildArgs/renderBracket/isOpenSCADAvailable against a mocked exec; confirm the real environment's openscad availability as an informational (non-failing) check.
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that missing-openscad and missing-template both fail with clear, actionable errors, and that the template's geometry matches the NOTES.md part description.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/model-forge
+  tech_stack: { languages: [javascript, openscad], frameworks: [] }
+  key_files:
+    - path: projects/furniture-brackets/NOTES.md
+      purpose: The real part's shape description this template is modeled after
+
+files_to_modify:
+  - file: pipeline/bracket-gen/templates/l-bracket.scad (new)
+    change: Parametric L-bracket geometry
+  - file: pipeline/bracket-gen/src/render.js (new)
+    change: openscad CLI wrapper
+
+design_decisions:
+  - decision: OpenSCAD over Onshape FeatureScript
+    rationale: Free/open (ROADMAP.md's own tooling constraint), scriptable/CLI-testable without a GUI — Onshape FeatureScript can't be unit-tested without a live Onshape session
+  - decision: Dependency-injected exec for the openscad shell-out
+    rationale: Same pattern as DT Forge's portunus/heimdall wrappers — lets the full argument-building and error-handling logic be unit-tested without the binary installed
+
+cross_cutting:
+  - concern: documentation
+    action: "ROADMAP.md Milestone 1's bracket-gen line gets checked/annotated once this lands"
+  - concern: model-provenance
+    action: "This story produces a template/tool, not a model file itself — no provenance record needed here; measurement-intake's story covers the actual generated-model case"
+
+risks:
+  - severity: medium
+    description: OpenSCAD is not installed on the dev machine (brew cask Gatekeeper-disabled as of 2026-09-01) — the .scad template's actual render correctness is unverified
+    mitigation: All argument-building/error-handling logic is unit-tested against a mocked exec; template syntax reviewed by hand; real rendering is a follow-up once OpenSCAD is installed (direct download, bypassing the disabled cask)
+
+references:
+  - path: projects/furniture-brackets/NOTES.md
+    relevant_excerpt: |
+      L-shaped angle bracket, two flat faces at ~90°. One face has a
+      countersunk hex-bolt hole. Other face has an oblong adjustment slot.

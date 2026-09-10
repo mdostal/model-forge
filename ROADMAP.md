@@ -12,9 +12,10 @@ This is the **Hive target**: the tools to build so the photo/measure → model �
 - [ ] Playset hole: same loop again. If both fit, the loop is real → automate it.
 
 ## Milestone 1 — the "measure → model" assist (functional lane)
-- [ ] **`bracket-gen`**: parametric template (Onshape FeatureScript or OpenSCAD) for L-brackets/angle-plates — feed thickness, face lengths, hole ⌀, slot dims → get a printable STL. Turns each new bracket into filling in numbers.
-- [ ] **Measurement intake**: a simple form/CLI that takes the NOTES.md measurement table and emits the OpenSCAD params.
-- [ ] **PLA-strength helper**: auto-thicken + fillet rules so metal→PLA parts don't snap.
+- [x] **`bracket-gen`**: parametric OpenSCAD template for L-brackets/angle-plates — feed thickness, face lengths, hole ⌀, slot dims → get a printable STL. `pipeline/bracket-gen/`. Unit-tested; real rendering needs OpenSCAD installed (this dev machine's brew cask is Gatekeeper-disabled — direct download works).
+- [x] **Measurement intake**: `pipeline/measurement-intake/` — reads a project's `measurements.yaml` and emits bracket-gen's params.
+- [x] **PLA-strength helper**: folded into measurement-intake's derivation (auto-thicken 1.75x + safe-minimum fillet radius), not a separate tool.
+- [ ] **Run it for real**: `projects/furniture-brackets/`'s measurement table is still blank — Milestone 0 (calipers on the physical part) has to happen before this tooling generates a real, sellable STL.
 
 ## Milestone 2 — photogrammetry glue (organic lane)
 - [ ] Evaluate RealityCapture vs Meshroom vs Polycam vs Apple Object Capture on one real object; pick one.
