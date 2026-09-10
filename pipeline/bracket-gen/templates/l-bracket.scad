@@ -1,6 +1,9 @@
 // l-bracket.scad — parametric L-shaped angle bracket.
 //
-// Two flat faces at 90 degrees. Face A carries a countersunk hex-bolt hole;
+// Two flat faces at 90 degrees. Face A carries an optional countersunk
+// hex-bolt hole (set hole_diameter=0 to omit it entirely — some real
+// brackets, like the small clip measured in
+// projects/furniture-brackets/measurements.yaml, only have the slot);
 // Face B carries an oblong adjustment slot. Modeled after the corner-bracket
 // shape described in ../../../projects/furniture-brackets/NOTES.md.
 //
@@ -47,11 +50,15 @@ module l_bracket() {
           cylinder(h = width, r = bend_radius);
     }
 
-    // Hex-bolt hole + countersink, centered on Face A
-    translate([hole_offset, width / 2, thickness - countersink_depth])
-      cylinder(h = countersink_depth + 1, d1 = hole_diameter, d2 = countersink_diameter);
-    translate([hole_offset, width / 2, -1])
-      cylinder(h = thickness + 2, d = hole_diameter);
+    // Hex-bolt hole + countersink, centered on Face A — omitted entirely
+    // when hole_diameter <= 0 (avoids a degenerate zero-radius cylinder,
+    // and some real brackets simply don't have this feature).
+    if (hole_diameter > 0) {
+      translate([hole_offset, width / 2, thickness - countersink_depth])
+        cylinder(h = countersink_depth + 1, d1 = hole_diameter, d2 = countersink_diameter);
+      translate([hole_offset, width / 2, -1])
+        cylinder(h = thickness + 2, d = hole_diameter);
+    }
 
     // Oblong adjustment slot on Face B (cut along the face's long axis)
     translate([-thickness - 1, width / 2, slot_offset])

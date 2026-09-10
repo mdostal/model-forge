@@ -1,0 +1,21 @@
+# Strengthen-and-retest variant — same part as measurements.yaml, but
+# printed at 2mm instead of 1.75mm, per the user's own fallback plan:
+# "we may do one at 1.75mm or bring it to 2mm if we need to strengthen
+# and test." Try measurements.yaml first; if it snaps or flexes too much
+# at the hole, print this one.
+
+face_a_length: 26
+face_b_length: 26
+width: 12               # same ASSUMPTION as measurements.yaml — confirm with a real reading
+material_thickness: 2
+material_source: print-native   # explicit 2mm, not an auto-bump
+print_material: PLA
+
+hole_diameter: 0
+countersink_diameter: 0
+countersink_depth: 0
+hole_offset: 0
+
+slot_length: 15
+slot_width: 5.5
+slot_offset: 13
