@@ -1,0 +1,129 @@
+project_name: "model-forge"
+project_type: framework
+has_ui: true   # own docs/showcase page (framework-library pattern), separate from DT Forge's app shell — see north_star below
+type: brownfield
+discovered: "2026-09-10"
+source: "README.md + ROADMAP.md + docs/ + projects/ + kickoff conversation"
+
+ship_target:
+  kind: github-release
+  notes: "Tag a release when a milestone's tooling lands (e.g. bracket-gen for Milestone 1), matching DT Forge's convention."
+
+claude_md_summary: |
+  No CLAUDE.md yet. Ground truth is README.md + ROADMAP.md:
+  - "The 3D model side of the maker stack — creating and owning models,
+    separate from printing them." Sibling to (not part of) dostal-3d-printing
+    (DT Forge) and drone-hub/video-utils.
+  - Two lanes matched to part type: Organic (Meshy Pro -> Blender repair) for
+    creatures/art; Functional (Onshape/Tinkercad parametric CAD) for
+    brackets/organizers/enclosures. A third mode, reverse-engineering
+    (photo-to-3D or caliper->CAD), replaces a real physical part.
+  - Explicit rule: "Don't AI-generate toleranced parts." Functional/toleranced
+    parts get measured and CAD'd; organic/artistic parts get generated.
+  - ROADMAP.md is framed as "the Hive target" — milestones scoped as stories
+    a Hive plan can pick up, ordered: M0 validate the loop by hand (no tools)
+    -> M1 measure->model assist (bracket-gen) -> M2 photogrammetry glue -> M3
+    Meshy->print wrapper -> M4 drone->house model.
+  - Guiding constraints: own the models (personal-use downloads never enter
+    the sellable path); match tool to part; solo-dad time is the bottleneck
+    (tools must save setup time, not add ceremony); prefer open/free tooling
+    (Onshape free tier, OpenSCAD, Blender, Meshroom) over revenue-capped
+    traps (Fusion 360 free tier caps at <$1k/yr).
+
+tech_stack:
+  languages: [markdown]
+  frameworks: []
+  build_tools: []
+  package_managers: []
+  versions: {}
+
+structure:
+  modules:
+    - name: projects/furniture-brackets
+      purpose: "First reverse-engineering job — replace worn corner-brackets. 7 reference photos captured 2026-09-08, measurement table in NOTES.md still blank (Milestone 0 not yet completed by hand)."
+      source: projects/furniture-brackets/
+    - name: projects/playset-bracket
+      purpose: "Second reverse-engineering job, queued to run the same loop once furniture-brackets validates it. No reference photos yet."
+      source: projects/playset-bracket/
+    - name: pipeline
+      purpose: "Tools we build (photogrammetry, mesh-repair, batch prep) — currently just a README, no code yet"
+      source: pipeline/
+    - name: docs
+      purpose: "photo-to-3d.md (reverse-engineering workflow + tool comparison), drone-to-model.md (Dostal Aerial upsell)"
+      source: docs/
+  entry_points:
+    - README.md
+    - ROADMAP.md
+
+architecture:
+  pattern: "Two-lane tool-matching (CAD for functional/toleranced, AI-gen for organic) plus a reverse-engineering mode; no application code yet"
+  di_framework: n/a
+  state_management: "Per-project NOTES.md (measurements, approach, licensing) as source of truth"
+  navigation: n/a
+  data_layer: "Local filesystem: projects/<name>/reference-photos/ + NOTES.md; no raws/sliced equivalent here (that's DT Forge's job)"
+
+conventions:
+  naming: "projects/<kebab-case-project-name>/ with reference-photos/ and NOTES.md"
+  file_organization: "pipeline/ for reusable tools, projects/ for individual reverse-engineering jobs, docs/ for workflow write-ups"
+  branching: "Single default branch so far (1 commit at kickoff)"
+  commit_messages: "Not enough history yet to establish a pattern"
+
+test_infrastructure:
+  unit: { framework: none, location: n/a, count: "0", coverage_tool: none }
+  integration: { framework: none, location: n/a }
+  e2e: { framework: none, location: n/a, count: "0" }
+  mocking: none
+  test_commands: []
+
+ci_cd:
+  platform: none
+  workflows: []
+  gating: "None configured yet"
+
+documentation_found:
+  - path: README.md
+    content_summary: "Repo purpose, two-lane tool matching, layout, why-build-tools rationale"
+  - path: ROADMAP.md
+    content_summary: "Milestone 0-4 backlog scoped as Hive-plannable stories, guiding constraints"
+  - path: docs/photo-to-3d.md
+    content_summary: "Reverse-engineering workflow + photogrammetry tool comparison"
+  - path: docs/drone-to-model.md
+    content_summary: "Drone/floorplan -> 3D house model workflow (Dostal Aerial upsell)"
+  - path: projects/furniture-brackets/NOTES.md
+    content_summary: "First reverse-engineering job: measurement table (blank), approach, licensing note"
+  - path: projects/playset-bracket/NOTES.md
+    content_summary: "Second reverse-engineering job, queued after furniture-brackets"
+
+existing_knowledge:
+  mcp_servers: []
+  existing_skills: []
+  existing_hooks: []
+
+integrations:
+  cli_tools: {}
+  mcp_servers: {}
+  vaults: {}
+
+north_star:
+  goal: >
+    Build the tools that make the photo/measure -> model -> print loop fast
+    and repeatable, so DT Forge (dostal-3d-printing) and its future studio
+    have something real to call into. Open-source as a framework/library —
+    "just like any web component or framework" — with its own docs/showcase
+    page, distinct from DT Forge's full product/app implementation that
+    wraps model-forge's tools with a different UI (clarified at kickoff,
+    2026-09-10, after initial confusion about which repo owns the UI).
+  audience: >
+    Solo developer (Mathew) today, time-constrained ("solo-dad time is the
+    bottleneck" per ROADMAP.md); open-sourced later so other makers can
+    consume the library the way they'd consume any framework.
+  expected_scale: >
+    Single user/solo-dev now. As an open-source library, later "scale" means
+    other developers depending on it, not concurrent backend load.
+  pain_points: >
+    Tools must *save* setup time, not add ceremony (ROADMAP.md's own
+    guiding constraint) — matches the DT Forge kickoff's AI-automation pain
+    point. Immediate gap: Milestone 0 (validate the manual loop by hand)
+    hasn't been completed yet — furniture-brackets has reference photos but
+    the NOTES.md measurement table is still blank, and the roadmap's own
+    ordering puts Milestone 1 (bracket-gen) after Milestone 0, not before it.
