@@ -1,0 +1,80 @@
+id: measurement-intake
+epic: bracket-gen-milestone-1
+title: Measurements.yaml -> bracket-gen params, with PLA-strength bump
+status: done
+methodology: classic
+depends_on: [bracket-gen]
+
+description: |
+  A CLI + library that reads a project's measurements.yaml (caliper
+  readings) and derives bracket-gen's full parameter set, applying
+  README.md's PLA-strength rule (thicken ~1.5-2x, or print PETG instead)
+  and a safe-minimum bend radius. Folds the roadmap's separate
+  "PLA-strength helper" item into this derivation rather than shipping it
+  as a third tool (design-discussion §2).
+
+acceptance_criteria:
+  - "Given a measurements.yaml with material_source=metal and print_material=PLA (default), when derived, then thickness is bumped 1.75x and a note explains why"
+  - "Given print_material=PETG, when derived, then thickness is left alone and a note explains why"
+  - "Given a measured bend_radius thinner than the safe minimum for the (possibly bumped) thickness, when derived, then it's raised to the safe minimum with a note"
+  - "Given a measurements.yaml missing a required field, when derived, then it fails fast naming every missing field"
+  - "Given a real measurements.yaml file, when generateFromFile runs, then it calls bracket-gen's render with the fully-derived params"
+
+steps:
+  - id: research
+    description: Confirm the required measurement fields against bracket-gen's PARAM_NAMES contract; decide the input format (resolved in design-discussion — structured measurements.yaml per project, not parsing NOTES.md's markdown table directly).
+    agent: researcher
+  - id: implement
+    description: Write deriveParams (pure), loadMeasurements, generateFromFile, and the CLI entry point.
+    agent: developer
+    depends_on: [research]
+  - id: test
+    description: Unit test deriveParams's PLA-bump/PETG/bend-radius/missing-field paths, plus an integration test that reads a real temp measurements.yaml and drives a fake render().
+    agent: tester
+    depends_on: [implement]
+  - id: review
+    description: Review that the derivation never silently drops a measurement and that every adjustment (thickness bump, bend-radius raise) is explained in the notes output, not silent.
+    agent: reviewer
+    depends_on: [test]
+  - id: integrate
+    description: Commit and push to feature branch.
+    agent: developer
+    depends_on: [review]
+
+context:
+  codebase: /Users/mdostal/Documents/work/model-forge
+  tech_stack: { languages: [javascript], frameworks: [] }
+  key_files:
+    - path: pipeline/bracket-gen/src/render.js
+      purpose: PARAM_NAMES contract and renderBracket this tool drives
+
+files_to_modify:
+  - file: pipeline/measurement-intake/src/index.js (new)
+    change: deriveParams, loadMeasurements, generateFromFile, CLI entry
+  - file: pipeline/package.json (new)
+    change: Shared package.json for both pipeline tools (js-yaml dependency)
+
+design_decisions:
+  - decision: measurements.yaml (structured) instead of parsing NOTES.md's markdown table
+    rationale: NOTES.md's table has blank "___" placeholder cells and is meant for human reading; a structured file is what a CLI should actually parse, keeping NOTES.md as the human-readable record
+  - decision: Default print_material=PLA with a 1.75x thickness multiplier
+    rationale: Mid-point of README's own "1.5-2x" guidance; PETG is the documented alternative when a user doesn't want the bulk
+
+cross_cutting:
+  - concern: documentation
+    action: "README.md's Milestone-1 section (or a new pipeline/measurement-intake/README.md) documents the measurements.yaml schema"
+  - concern: model-provenance
+    action: "generateFromFile's output notes (thickness bump, bend-radius raise) are the provenance record for how a generated STL's dimensions relate to the real measured part — kept alongside the project's NOTES.md when a real part is eventually run through this"
+
+risks:
+  - severity: low
+    description: The 1.75x thickness multiplier and bend-radius ratio are heuristics from a README note, not validated against a real test-fit print yet
+    mitigation: Documented as tunable in the code comments; ROADMAP.md's Milestone 0 (print + test-fit) is exactly what will validate or correct these numbers
+
+references:
+  - path: pipeline/bracket-gen/src/render.js
+    relevant_excerpt: |
+      export const PARAM_NAMES = [ "face_a_length", "face_b_length", "width",
+      "thickness", "bend_radius", "hole_diameter", "countersink_diameter",
+      "countersink_depth", "hole_offset", "slot_length", "slot_width",
+      "slot_offset" ];
