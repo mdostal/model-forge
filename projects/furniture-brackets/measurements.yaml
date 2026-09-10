@@ -1,0 +1,41 @@
+# Real measurements from the 2026-09-10 photo drop (14 photos,
+# reference-photos/PXL_20260910_*). Rounded per the user's own call —
+# "we can round everything this doesn't have to be exact."
+#
+# Shape correction from the original NOTES.md speculation: this part is
+# simpler than first assumed. It's a small L-bent brass/bronze clip with
+# ONE elongated oval hole on the vertical face — no separate hex-bolt hole
+# on the flat/foot face. hole_diameter is set to 0 below to omit that
+# feature (see templates/l-bracket.scad).
+#
+# First print attempt: near-native thickness (1.75mm), NOT the tool's
+# default 1.75x metal->PLA bump — material_source is set to print-native
+# so measurement-intake doesn't auto-thicken. See measurements-2mm.yaml
+# for the strengthen-and-retest variant if 1.75mm doesn't hold up.
+
+face_a_length: 26      # "26mm per bracket direction" — both faces treated as equal
+face_b_length: 26
+width: 12               # ASSUMPTION — not explicitly measured in this drop; estimated
+                         # from photo proportions. Flag for a real caliper reading
+                         # (width = how wide the bent strip is, not a face length).
+material_thickness: 1.75  # first-attempt print thickness (measured original ~1.8mm)
+material_source: print-native   # skip the 1.75x auto-bump — testing near-native first
+print_material: PLA
+
+# No hex-bolt hole on this part — omit that feature.
+hole_diameter: 0
+countersink_diameter: 0
+countersink_depth: 0
+hole_offset: 0
+
+# The oval/slot hole on the vertical face — "large oval... about 4mm of
+# spacing in the middle and 7mm at the ends and the whole thing is about
+# 15mm across." Our template's slot is a constant-width stadium shape (no
+# dogbone/keyhole support yet), so this first pass approximates with the
+# midpoint width. If the screw doesn't seat/slide right on the test print,
+# the real hole is likely closer to a keyhole (7mm round pockets at each
+# end, 4mm channel between) — that's a template enhancement to make next,
+# not something to guess further on without another measurement/photo.
+slot_length: 15
+slot_width: 5.5   # midpoint of the described 4-7mm range
+slot_offset: 13   # centered along a 26mm face — ASSUMPTION, not explicitly measured
