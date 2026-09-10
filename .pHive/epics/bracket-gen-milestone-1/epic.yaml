@@ -1,0 +1,38 @@
+name: bracket-gen-milestone-1
+title: "ROADMAP Milestone 1 — measure-to-model assist (functional lane)"
+description: |
+  Parametric L-bracket generator (OpenSCAD) + a measurement-intake CLI that
+  turns caliper measurements into printable params, with the PLA-strength
+  bump folded in. Generic tooling, not furniture-bracket-specific — real
+  generation for that part waits on Milestone 0 (calipers on the physical
+  part), which is still open.
+target_codebase: /Users/mdostal/Documents/work/model-forge
+methodology: classic
+version_bump: minor
+sidecar_retention: transient
+
+git_flow:
+  base_branch: dev
+  branch_strategy: per-epic
+
+planning_team:
+  matched_tags: [greenfield-tooling, personal-project, roadmap-driven]
+  roster: [researcher, technical-writer, tpm]
+  per_tag_reasoning:
+    greenfield-tooling: "No existing pipeline code; two new CLI tools needed research + design"
+    roadmap-driven: "Scope taken directly from ROADMAP.md's own Milestone 1 breakdown rather than invented from scratch"
+  confidence: high
+  gate_decisions:
+    design_discussion_review: user-informed-recommendation-no-blocking-gate
+    hv_gate: skipped-condensed-medium-scope
+    structured_outline: skipped-medium-scope
+
+stories:
+  - id: bracket-gen
+    title: Parametric OpenSCAD L-bracket template + render wrapper
+    complexity: medium
+    depends_on: []
+  - id: measurement-intake
+    title: Measurements.yaml -> bracket-gen params, with PLA-strength bump
+    complexity: medium
+    depends_on: [bracket-gen]

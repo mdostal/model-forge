@@ -1,0 +1,13 @@
+{
+  "name": "model-forge-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "model-forge pipeline tools: bracket-gen (parametric OpenSCAD L-bracket) + measurement-intake (NOTES.md-style measurements -> bracket-gen params).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test bracket-gen/test/*.test.js measurement-intake/test/*.test.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
