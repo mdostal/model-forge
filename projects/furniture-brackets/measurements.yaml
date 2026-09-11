@@ -1,35 +1,35 @@
 # Real measurements from the 2026-09-10 photo drop (14 photos,
 # reference-photos/PXL_20260910_*).
 #
-# CORRECTED 2026-09-10 (second pass): the first pass under-used these
-# photos — several caliper LCDs were shot upside-down and got dismissed as
-# "too hard to read" instead of rotated and re-read. Rotating them 180°
-# and re-reading gave real numbers for every dimension below except
-# slot_offset (still a visual-proportion estimate, flagged inline).
+# CORRECTED 2026-09-10, third pass — the hole/width numbers below come
+# directly from the user after two failed attempts at reading the caliper
+# photos myself (upside-down LCDs misread twice in a row). Trust these
+# verbal numbers over any further photo re-reading:
+#   - hole: 12mm long x 7mm wide
+#   - margin from hole edge to the part's outer edge: ~4mm
+#   => strip width = 7 (hole width) + 4 + 4 (margin each side) = 15mm
+# This replaces an earlier wrong reading that took the hole's 12mm LENGTH
+# for the strip's WIDTH.
 #
-# Shape correction (from the original NOTES.md speculation, still holds):
-# this part is simpler than first assumed — a small L-bent brass/bronze
-# clip with ONE elongated oval hole on one face, no separate hex-bolt hole
-# on the other. hole_diameter is set to 0 to omit that feature (see
-# templates/l-bracket.scad).
+# Face lengths (21.7mm / 26mm, unequal) came from a still-earlier
+# caliper-photo read and were NOT disputed by the user's correction —
+# kept as-is.
 #
-# Thickness discrepancy worth a real double-check: the user's verbal
-# estimate was ~1.8mm; five separate caliper readings on the actual part
-# instead cluster at 0.93-1.34mm (avg ~1.15mm). material_thickness below
-# uses the measured value. print_thickness (1.75mm here, 2mm in
-# measurements-2mm.yaml) is the user's own explicit target for this test
-# print, independent of native thickness — not re-derived from a
-# multiplier, so it's unchanged by this correction.
+# Shape: small L-bent brass/bronze clip, ONE oval hole on one face (12x7mm,
+# constant-width stadium — no dogbone/keyhole, that was an earlier
+# over-read of "4mm/7mm" from the original verbal description), no
+# separate hex-bolt hole on the other face (hole_diameter=0 omits it).
+#
+# Thickness: native material measures ~1.15mm (5 caliper readings,
+# 0.93-1.34mm), well under the original ~1.8mm verbal estimate — flagged,
+# not re-litigated here. Print target (1.75mm) is the user's own explicit
+# choice, independent of native thickness.
 
-face_a_length: 21.7    # measured (caliper): the foot, no hole — NOT equal to face_b
+face_a_length: 21.7    # measured (caliper): the foot, no hole
 face_b_length: 26      # measured (caliper): the arm carrying the oval hole
-width: 12               # measured (caliper, photo PXL_20260910_180121574) — corrected
-                         # from an unmeasured 12mm ASSUMPTION in the first pass; the
-                         # real reading (~12.0-12.1mm) happens to confirm the same value
-material_thickness: 1.75  # first-attempt PRINT thickness — the user's explicit target,
-                           # not derived from native thickness (see note above; native
-                           # measured ~1.15mm, well under the ~1.8mm verbal estimate)
-material_source: print-native   # skip the 1.75x auto-bump — printing at an explicit target, not a derived bump
+width: 15               # derived: hole_width(7) + margin(4) + margin(4), per user correction
+material_thickness: 1.75  # first-attempt PRINT thickness — user's explicit target
+material_source: print-native   # printing at an explicit target, not a derived bump
 print_material: PLA
 
 # No hex-bolt hole on this part — omit that feature.
@@ -38,19 +38,11 @@ countersink_diameter: 0
 countersink_depth: 0
 hole_offset: 0
 
-# The oval/slot hole on face_b. slot_length and slot_width are now real
-# caliper readings (photos showing the loop/hole close-up, rotated for a
-# correct read), not estimates:
-#   - slot_length: ~15.1mm measured, matches the user's "~15mm across"
-#   - slot_width: 4.24-4.33mm measured (3 consistent readings) at the
-#     narrow point, matches the user's "4mm in the middle" — no photo
-#     confirmed a wider "7mm at the ends" reading, so this first pass uses
-#     the measured narrow width throughout (template only supports a
-#     constant-width stadium slot anyway; see l-bracket.scad). If the
-#     user's described widening at the ends is real, a keyhole-slot
-#     template variant is the next step, not a guess here.
-slot_length: 15.1
-slot_width: 4.3
-slot_offset: 16.5   # STILL AN ESTIMATE — visual proportion only (hole sits near
-                     # the tip of the 26mm arm, not centered); no caliper reading
-                     # for this one in the photo set
+# The oval hole on face_b — per user correction: 12mm long x 7mm wide,
+# a plain constant-width stadium slot (matches the template).
+slot_length: 12
+slot_width: 7
+slot_offset: 16   # estimate: positions the hole ~4mm from the tip of the 26mm
+                   # arm (26 - 4 - 6), consistent with the stated 4mm edge
+                   # margin — still not a direct caliper reading for THIS
+                   # specific distance, flag if it prints off-center
