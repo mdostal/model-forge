@@ -4,6 +4,7 @@
 // — pick a direction, tune the numbers, or tell me what to change.
 use <model-forge/tray.scad>
 use <model-forge/grate.scad>
+use <model-forge/baking_sheet.scad>
 
 // --- Draft A: rounded tray with a recessed cooking-dish pocket ---
 // 1in corner radius, 0.2in floor. Updated 2026-09-11 per feedback: drop
@@ -33,4 +34,20 @@ translate([0, 260, 0])
     frame_width   = 6.35,   // 0.25in solid border
     bar_width     = 10,     // ~0.4in bars
     gap_width     = 7.6     // ~0.3in gaps between bars
+  );
+
+// --- Draft C: baking sheet with handles, matching the paper template
+// you already test-fit (11.25 x 6.25in overall). 5 simple variables;
+// everything else (rounding, floor thickness, handle width) scales from
+// them automatically. handle_size is a rough guess (0.75in) backed out
+// of the paper template's overall width — tell me the real handle
+// length/thickness once you check it against the paper and I'll adjust
+// pan_width to keep the 11.25in total exact.
+translate([0, -200, 0])
+  baking_sheet(
+    pan_width       = 247.65,  // 9.75in body (11.25in total - 2*0.75in handles)
+    pan_height      = 158.75,  // 6.25in
+    handle_size     = 19.05,   // 0.75in — rough guess, confirm against the paper template
+    handle_thickness = 2,      // rough guess — thin flat grip tab
+    pan_depth       = 8        // rough guess — how deep the pan cavity is
   );
