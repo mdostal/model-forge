@@ -3,8 +3,10 @@
 // pan_height (the pan body, NOT including the handles), handle_size (how
 // far each handle protrudes), handle_thickness, and pan_depth. Everything
 // else — corner rounding, floor thickness, handle width/rounding, pocket
-// inset — is a fixed proportion derived from those, per the user's own
-// framing: "the rest scales with it, rounding etc."
+// inset, and the handle hole size — is a fixed proportion derived from
+// those, per the user's own framing: "the rest scales with it, rounding
+// etc." Pass handle_hole_diameter explicitly if you want to override the
+// auto-scaled hole size (e.g. tune it once printed); 0 omits the hole.
 //
 //   use <model-forge/baking_sheet.scad>
 //   baking_sheet(pan_width=247.7, pan_height=158.75, handle_size=19,
@@ -17,7 +19,7 @@
 // (11.25in total, 0.75in handles each side -> pan_width = 9.75in body).
 use <model-forge/tray.scad>
 
-module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_depth) {
+module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_depth, handle_hole_diameter = -1) {
   // Fixed proportions — not exposed as separate variables on purpose.
   corner_radius   = min(pan_width, pan_height) * 0.12;
   floor_thickness = pan_depth * 0.3;
@@ -25,6 +27,19 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
   inset_margin    = corner_radius * 0.5;
   handle_width    = pan_height * 0.5;
   handle_radius   = min(corner_radius, handle_width / 2 - 0.5, handle_size / 2 - 0.5);
+  // handle_hole_diameter=-1 (the default) means "auto" — scale from the
+  // handle's own footprint. Pass 0 to omit the hole entirely, or any
+  // positive number to set it explicitly.
+  hole_d = handle_hole_diameter >= 0 ? handle_hole_diameter : min(handle_width, handle_size) * 0.5;
+
+  module handle_2d() {
+    difference() {
+      rounded_rect_2d(handle_size + corner_radius, handle_width, handle_radius);
+      if (hole_d > 0)
+        translate([(handle_size + corner_radius) / 2, handle_width / 2])
+          circle(d = hole_d, $fn = 48);
+    }
+  }
 
   union() {
     rounded_tray(
@@ -38,10 +53,10 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
     // Handle on the left short edge — extends into negative X.
     translate([-handle_size, (pan_height - handle_width) / 2, 0])
       linear_extrude(height = handle_thickness)
-        rounded_rect_2d(handle_size + corner_radius, handle_width, handle_radius);
+        handle_2d();
     // Handle on the right short edge.
     translate([pan_width - corner_radius, (pan_height - handle_width) / 2, 0])
       linear_extrude(height = handle_thickness)
-        rounded_rect_2d(handle_size + corner_radius, handle_width, handle_radius);
+        handle_2d();
   }
 }

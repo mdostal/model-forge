@@ -17,12 +17,18 @@
 // what's left under the pocket, rim_height is how tall the surrounding
 // wall stands above the pocket floor.
 //
-// The lip (lip_width/lip_thickness) is a thin flange at the TOP of the
-// rim (from total_height-lip_thickness to total_height), sticking out
-// lip_width beyond the main body on every side — corrected 2026-09-11
-// per feedback on the real rail photo: the groove is near the top of the
-// cavity wall, not the bottom. Both default to 0 (no lip) so existing
-// calls keep working unchanged.
+// The lip (lip_width/lip_thickness) is a thin RING at the TOP of the rim
+// (from total_height-lip_thickness to total_height), overhanging
+// lip_width beyond the main body on every side. Both default to 0 (no
+// lip) so existing calls keep working unchanged.
+//
+// Bug fixed 2026-09-11: this was a full solid disc, not a ring — at the
+// bottom that was harmless (it just sat under the floor), but moved to
+// the top it capped the pocket shut, making the whole tray either fully
+// lidded or (once the pocket cut and the disc's own solid thickness
+// overlapped confusingly) an apparently solid block. The lip is now a
+// difference of the expanded outline minus the tray's own outline, so it
+// only adds the overhanging ring — it never touches the pocket opening.
 
 // hull-of-4-circles rounded rect — much faster to render than a
 // minkowski-based approach for this shape (no minkowski sum needed).
@@ -49,9 +55,19 @@ module rounded_tray(
 
   union() {
     if (lip_width > 0 && lip_thickness > 0) {
-      translate([-lip_width, -lip_width, total_height - lip_thickness])
+      // eps: tiny overlap into the tray's own outline so this ring's
+      // inner edge doesn't sit exactly flush with the main body's outer
+      // face — an exact coincident face is the same class of CGAL
+      // boolean glitch fixed in joint.scad earlier tonight.
+      eps = 0.05;
+      translate([0, 0, total_height - lip_thickness])
         linear_extrude(height = lip_thickness)
-          rounded_rect_2d(outer_width + 2 * lip_width, outer_height + 2 * lip_width, corner_radius + lip_width);
+          difference() {
+            translate([-lip_width, -lip_width])
+              rounded_rect_2d(outer_width + 2 * lip_width, outer_height + 2 * lip_width, corner_radius + lip_width);
+            translate([eps, eps])
+              rounded_rect_2d(outer_width - 2 * eps, outer_height - 2 * eps, corner_radius - eps);
+          }
     }
     difference() {
       linear_extrude(height = total_height)
