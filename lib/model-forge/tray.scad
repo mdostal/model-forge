@@ -17,10 +17,12 @@
 // what's left under the pocket, rim_height is how tall the surrounding
 // wall stands above the pocket floor.
 //
-// The lip (lip_width/lip_thickness) is a thin flange at the very bottom
-// (z=0 to lip_thickness), sticking out lip_width beyond the main body on
-// every side — the part that actually slides into a rail groove. Both
-// default to 0 (no lip) so existing calls keep working unchanged.
+// The lip (lip_width/lip_thickness) is a thin flange at the TOP of the
+// rim (from total_height-lip_thickness to total_height), sticking out
+// lip_width beyond the main body on every side — corrected 2026-09-11
+// per feedback on the real rail photo: the groove is near the top of the
+// cavity wall, not the bottom. Both default to 0 (no lip) so existing
+// calls keep working unchanged.
 
 // hull-of-4-circles rounded rect — much faster to render than a
 // minkowski-based approach for this shape (no minkowski sum needed).
@@ -47,7 +49,7 @@ module rounded_tray(
 
   union() {
     if (lip_width > 0 && lip_thickness > 0) {
-      translate([-lip_width, -lip_width, 0])
+      translate([-lip_width, -lip_width, total_height - lip_thickness])
         linear_extrude(height = lip_thickness)
           rounded_rect_2d(outer_width + 2 * lip_width, outer_height + 2 * lip_width, corner_radius + lip_width);
     }
