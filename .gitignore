@@ -3,6 +3,7 @@
 
 # Generated / heavy artifacts — regenerable, keep out of git
 pipeline/**/output/
+projects/**/output/
 *.ply
 *.obj.mtl
 exports/
