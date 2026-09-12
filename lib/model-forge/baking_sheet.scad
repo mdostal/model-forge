@@ -14,6 +14,14 @@
 // fraction of the handle's own size (auto), or set it explicitly — pass
 // 0 for a solid tab with no cutout at all.
 //
+// Bug fixed 2026-09-11: the handle used to overlap a full corner_radius
+// (~19mm here) INTO the pan for a smooth-looking join — the user's
+// screenshot showed this as a visible bump on the pan's flat face
+// ("we don't do the half that is IN the pan"). Now it overlaps by just
+// CONNECT_OVERLAP (a small fixed amount for a safe manifold weld), so
+// the handle is a clean external loop and the pan stays flat right up
+// to its own edge.
+//
 //   use <model-forge/baking_sheet.scad>
 //   baking_sheet(pan_width=247.7, pan_height=158.75, handle_size=19,
 //                handle_thickness=2, pan_depth=8, handle_hole_margin=6);
@@ -34,7 +42,8 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
   handle_z        = (total_height - handle_thickness) / 2; // centered in the pan's thickness, not flush with the bottom
   inset_margin    = corner_radius * 0.5;
   handle_width    = pan_height * 0.5;
-  handle_length   = handle_size + corner_radius; // local X span of the handle_2d() shape below
+  CONNECT_OVERLAP = 2; // fixed small overlap into the pan for a safe weld — NOT corner_radius
+  handle_length   = handle_size + CONNECT_OVERLAP; // local X span of the handle_2d() shape below
   handle_radius   = min(corner_radius, handle_width / 2 - 0.5, handle_size / 2 - 0.5);
   // -1 (the default) means "auto" — a margin that leaves a visibly thick
   // loop wall. Pass 0 to skip the cutout (solid tab), or set your own.
@@ -66,7 +75,7 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
       linear_extrude(height = handle_thickness)
         handle_2d();
     // Handle on the right short edge.
-    translate([pan_width - corner_radius, (pan_height - handle_width) / 2, handle_z])
+    translate([pan_width - CONNECT_OVERLAP, (pan_height - handle_width) / 2, handle_z])
       linear_extrude(height = handle_thickness)
         handle_2d();
   }
