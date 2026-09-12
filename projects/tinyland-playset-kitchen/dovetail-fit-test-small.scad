@@ -12,52 +12,49 @@
 // in oven-grate-halves.scad's frame-band joint (and the size any
 // per-bar grate joint would need too). Press the same tab into each
 // slot, find the one that actually snaps/holds.
+//
+// Bug fixed 2026-09-12, same root cause as dovetail-fit-test.scad: slots
+// cut sideways into one continuous block landed on internal boundaries,
+// not a real exterior face, so only slot 0 was reachable. Fixed the same
+// way -- dovetail_tab_2d's natural orientation, directly on the comb's
+// shared y=0 edge, no rotation.
 use <model-forge/joint.scad>
 
 thickness  = 5.08; // matches the grate's own thickness, not the 3mm wall panels
 tab_width  = 3.5;
 tab_depth  = 2.5;
 taper      = 0.8;
-// dovetail_tabs_2d's pitch is tab_width*2 = 7mm -- edge_length must stay
-// under that so floor(edge_length/pitch) still comes out to exactly 1
-// tab per slot, not 2. Kept separate from plate_h (the block's own
-// height, which just needs room for the tab band + a label above it).
-tab_edge_length = 6;
-tab_y_offset    = 4;  // where the tab band sits within the block
-plate_h         = 16;
-step            = 10; // per-slot block width on the comb
+plate_h    = 8;    // just needs to clear tab_depth + taper + margin
+step       = 10;   // spacing between slot centers along the shared edge
+base_h     = 8;    // tab stub's own base block height
 
 clearances = [-0.2, -0.15, -0.1, -0.05, -0.02, 0, 0.05, 0.15];
 
 module labeled_comb() {
   difference() {
     cube([len(clearances) * step, plate_h, thickness]);
-    for (i = [0 : len(clearances) - 1])
-      translate([i * step, tab_y_offset, -1])
-        rotate([0, 0, -90])
-          linear_extrude(height = thickness + 2)
-            dovetail_tabs_2d(
-              edge_length = tab_edge_length,
-              tab_width   = tab_width,
-              tab_depth   = tab_depth,
-              taper       = taper,
-              clearance   = clearances[i]
-            );
+    for (i = [0 : len(clearances) - 1]) {
+      c = clearances[i];
+      translate([i * step + step / 2, 0, -1])
+        linear_extrude(height = thickness + 2)
+          dovetail_tab_2d(tab_width + 2 * c, tab_depth + c, taper + c);
+    }
   }
   for (i = [0 : len(clearances) - 1])
-    translate([i * step + 1, plate_h - 5, thickness])
+    translate([i * step + 1, plate_h - 3, thickness])
       linear_extrude(height = 0.4)
         text(str(clearances[i]), size = 2.4);
 }
 
 labeled_comb();
 
-// One tab stub — the same physical tab pressed into each slot above.
-translate([0, plate_h + 8, 0])
+// One tab stub — same natural orientation, protrudes above its own
+// block's top edge. Slide toward whichever slot you're testing, push
+// up (+Y) to mate, flat, no rotation.
+translate([0, -(base_h + 8), 0])
   union() {
-    cube([12, plate_h, thickness]);
-    translate([12, tab_y_offset, 0])
-      rotate([0, 0, -90])
-        linear_extrude(height = thickness)
-          dovetail_tabs_2d(edge_length = tab_edge_length, tab_width = tab_width, tab_depth = tab_depth, taper = taper);
+    cube([tab_width + 8, base_h, thickness]);
+    translate([(tab_width + 8) / 2, base_h, 0])
+      linear_extrude(height = thickness)
+        dovetail_tab_2d(tab_width, tab_depth, taper);
   }
