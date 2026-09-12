@@ -81,10 +81,18 @@ module full_grate() {
 // Crop a coupon_size x coupon_size square out of the bottom-left corner
 // (X=0 short edge meets Y=0 long edge) — shows both lip_width and
 // end_lip_width, joined by the rounded corner, as one connected piece.
+//
+// Bug fixed 2026-09-11: the crop window used to start at a hardcoded
+// (-1,-1), which sits INSIDE the lip's own overhang — the lip flares out
+// to NEGATIVE x/y (see tray.scad's lip_ring translate([-ew,-lip_width])),
+// so most of end_lip_width's overhang was silently cropped away before
+// it ever reached the printed coupon. margin below starts the window at
+// the lip's true outer reach instead, so the full overhang prints.
 module corner_crop() {
+  margin = max(lip_width_in, end_lip_width_in) * IN_TO_MM + 1;
   intersection() {
     children(0);
-    translate([-1, -1, -1])
+    translate([-margin, -margin, -1])
       cube([coupon_size_mm, coupon_size_mm, CROP_TALL]);
   }
 }
