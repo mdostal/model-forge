@@ -17,7 +17,7 @@ inset_margin_mm      = 6.35; // [1:0.1:25]
 /* [Lip — slides into the oven cavity's support-rail groove] */
 lip_width_in     = 0.12; // [0:0.01:1]  long (top/bottom) edges
 end_lip_width_in = 0.5;  // [0:0.01:1]  short (left/right) edges
-lip_thickness_mm = 2;    // [0.5:0.5:5]
+lip_thickness_mm = 2.5;  // [0.5:0.1:3]  must be <=3mm to fit the real rail; 2.5mm is the sweet spot
 
 IN_TO_MM = 25.4;
 
