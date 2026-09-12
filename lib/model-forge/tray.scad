@@ -19,8 +19,13 @@
 //
 // The lip (lip_width/lip_thickness) is a thin RING at the TOP of the rim
 // (from total_height-lip_thickness to total_height), overhanging
-// lip_width beyond the main body on every side. Both default to 0 (no
-// lip) so existing calls keep working unchanged.
+// lip_width beyond the main body on the top/bottom (long) edges. Pass
+// end_lip_width to overhang a DIFFERENT amount on the left/right (short)
+// edges — e.g. a bigger lip on the short ends as a step toward a full
+// handle, without committing to one. Defaults to lip_width (uniform
+// overhang on all 4 sides) when left unset. Both lip_width and
+// lip_thickness default to 0 (no lip) so existing calls keep working
+// unchanged.
 //
 // Bug fixed 2026-09-11: this was a full solid disc, not a ring — at the
 // bottom that was harmless (it just sat under the floor), but moved to
@@ -49,22 +54,27 @@ module rounded_tray(
   rim_height,
   inset_margin,
   lip_width = 0,
-  lip_thickness = 0
+  lip_thickness = 0,
+  end_lip_width = -1  // -1 sentinel = "same as lip_width"; short (left/right) edges
 ) {
   total_height = floor_thickness + rim_height;
+  ew = end_lip_width < 0 ? lip_width : end_lip_width;
 
   union() {
-    if (lip_width > 0 && lip_thickness > 0) {
+    if ((lip_width > 0 || ew > 0) && lip_thickness > 0) {
       // eps: tiny overlap into the tray's own outline so this ring's
       // inner edge doesn't sit exactly flush with the main body's outer
       // face — an exact coincident face is the same class of CGAL
       // boolean glitch fixed in joint.scad earlier tonight.
       eps = 0.05;
+      expanded_r = corner_radius + min(lip_width, ew);
       translate([0, 0, total_height - lip_thickness])
         linear_extrude(height = lip_thickness)
           difference() {
-            translate([-lip_width, -lip_width])
-              rounded_rect_2d(outer_width + 2 * lip_width, outer_height + 2 * lip_width, corner_radius + lip_width);
+            // ew grows the X axis (left/right, the short edges);
+            // lip_width grows the Y axis (top/bottom, the long edges).
+            translate([-ew, -lip_width])
+              rounded_rect_2d(outer_width + 2 * ew, outer_height + 2 * lip_width, expanded_r);
             translate([eps, eps])
               rounded_rect_2d(outer_width - 2 * eps, outer_height - 2 * eps, corner_radius - eps);
           }
