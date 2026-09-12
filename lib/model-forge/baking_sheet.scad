@@ -30,6 +30,8 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
   corner_radius   = min(pan_width, pan_height) * 0.12;
   floor_thickness = pan_depth * 0.3;
   rim_height      = pan_depth * 0.7;
+  total_height    = floor_thickness + rim_height;
+  handle_z        = (total_height - handle_thickness) / 2; // centered in the pan's thickness, not flush with the bottom
   inset_margin    = corner_radius * 0.5;
   handle_width    = pan_height * 0.5;
   handle_length   = handle_size + corner_radius; // local X span of the handle_2d() shape below
@@ -60,11 +62,11 @@ module baking_sheet(pan_width, pan_height, handle_size, handle_thickness, pan_de
       inset_margin = inset_margin
     );
     // Handle on the left short edge — extends into negative X.
-    translate([-handle_size, (pan_height - handle_width) / 2, 0])
+    translate([-handle_size, (pan_height - handle_width) / 2, handle_z])
       linear_extrude(height = handle_thickness)
         handle_2d();
     // Handle on the right short edge.
-    translate([pan_width - corner_radius, (pan_height - handle_width) / 2, 0])
+    translate([pan_width - corner_radius, (pan_height - handle_width) / 2, handle_z])
       linear_extrude(height = handle_thickness)
         handle_2d();
   }

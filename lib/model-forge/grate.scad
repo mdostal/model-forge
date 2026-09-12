@@ -8,25 +8,34 @@
 //
 // Bars run parallel to the height (vertical bars spanning the width),
 // starting and ending with a solid bar against the frame — real oven
-// racks don't have a gap right at the edge. Spacing is pitch-based
-// (bar_width + gap_width repeating); it won't divide the interior
-// perfectly evenly on every size, so the last bar absorbs any leftover
-// width. Tune bar_width/gap_width and re-render if that's visible.
+// racks don't have a gap right at the edge.
+//
+// Auto-fit spacing (fixed 2026-09-11): bar_width/gap_width are a
+// requested PITCH, not exact — the number of bars is chosen to best
+// match that pitch, then the GAP width (not the bar width) is adjusted
+// slightly so the whole pattern divides the interior exactly, ending
+// flush with the frame on both sides. The earlier version kept a fixed
+// gap count and dumped whatever didn't divide evenly into one oversized
+// final bar ("thick on one side") — this keeps every bar the same width
+// and instead makes the gaps a hair wider or narrower than requested,
+// which is far less visually obvious.
 use <model-forge/tray.scad> // rounded_rect_2d
 
 module oven_grate(outer_width, outer_height, corner_radius, thickness, frame_width, bar_width, gap_width) {
   inner_width = outer_width - 2 * frame_width;
   inner_height = outer_height - 2 * frame_width;
-  pitch = bar_width + gap_width;
-  n_gaps = floor((inner_width - bar_width) / pitch);
+
+  approx_n_bars = round((inner_width + gap_width) / (bar_width + gap_width));
+  n_bars = max(approx_n_bars, 2);
+  actual_gap_width = (inner_width - n_bars * bar_width) / (n_bars - 1);
 
   difference() {
     linear_extrude(height = thickness)
       rounded_rect_2d(outer_width, outer_height, corner_radius);
-    for (i = [0 : n_gaps - 1]) {
-      x = frame_width + bar_width + i * pitch;
+    for (i = [0 : n_bars - 2]) {
+      x = frame_width + bar_width + i * (bar_width + actual_gap_width);
       translate([x, frame_width, -1])
-        cube([gap_width, inner_height, thickness + 2]);
+        cube([actual_gap_width, inner_height, thickness + 2]);
     }
   }
 }
