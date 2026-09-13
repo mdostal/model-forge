@@ -8,6 +8,13 @@
 // they line up into one continuous rounded-rectangle outline once
 // assembled — the original grate's shape, built from 3 piece types.
 //
+// The 2 end slots (edge bars) have floor-at-top/tenon-from-bottom,
+// opposite the 14 middle slots (normal bars, floor-at-bottom) — the
+// edge bars are loaded by the rack pulling against the oven cavity's
+// side groove, not by weight from above, so the floor goes on the side
+// that actually resists that force. See oven-grate-rack.scad's
+// grate_rail() comment for the full reasoning.
+//
 // View this in OpenSCAD to see the whole thing fit together before
 // printing the real (separate) pieces from oven-grate-rack.scad.
 use <model-forge/rack.scad>
@@ -22,6 +29,11 @@ n_bars          = 16;
 end_lip_width_in = 0.5;
 lip_thickness_mm = 2.5;
 modular_corner_radius = 22;
+
+TENON_WIDTH = 3.5;
+TENON_DEPTH = 2.5;
+TENON_TAPER = 0.8;
+CLEARANCE   = -0.1;
 
 IN_TO_MM = 25.4;
 outer_w = outer_width_in * IN_TO_MM;
@@ -39,7 +51,22 @@ crop_x = frame_width_mm + bar_width_mm;
 
 module rail_shape() {
   intersection() {
-    rack_rail(outer_w, frame_width_mm, thickness, n_bars, bar_pitch, first_offset);
+    difference() {
+      cube([outer_w, frame_width_mm, thickness]);
+      for (i = [0 : n_bars - 1]) {
+        x = first_offset + i * bar_pitch;
+        flip_this_one = (i == 0 || i == n_bars - 1);
+        z0 = flip_this_one ? -1 : floor_thickness;
+        h  = thickness - floor_thickness + 1;
+        translate([x, 0, z0])
+          linear_extrude(height = h)
+            dovetail_tab_2d(
+              TENON_WIDTH + 2 * CLEARANCE,
+              TENON_DEPTH + CLEARANCE,
+              TENON_TAPER + CLEARANCE
+            );
+      }
+    }
     linear_extrude(height = thickness + 2)
       rounded_rect_2d(outer_w, outer_h, modular_corner_radius);
   }
@@ -55,13 +82,14 @@ module edge_bar_left_shape() {
       translate([-1, -1, -1])
         cube([crop_x + 1, outer_h + 2, thickness + 2]);
     }
-    translate([first_offset, frame_width_mm, floor_thickness])
+    // Tenons at z=0 (floor-at-top) — matches the flipped rail slots.
+    translate([first_offset, frame_width_mm, 0])
       rotate([0, 0, 180])
         linear_extrude(height = tenon_h)
-          dovetail_tab_2d(3.5, 2.5, 0.8);
-    translate([first_offset, outer_h - frame_width_mm, floor_thickness])
+          dovetail_tab_2d(TENON_WIDTH, TENON_DEPTH, TENON_TAPER);
+    translate([first_offset, outer_h - frame_width_mm, 0])
       linear_extrude(height = tenon_h)
-        dovetail_tab_2d(3.5, 2.5, 0.8);
+        dovetail_tab_2d(TENON_WIDTH, TENON_DEPTH, TENON_TAPER);
     translate([-lip_w, frame_width_mm, thickness - lip_thickness_mm])
       cube([lip_w + eps, inner_h, lip_thickness_mm]);
   }

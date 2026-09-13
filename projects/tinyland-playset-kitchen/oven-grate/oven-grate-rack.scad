@@ -75,12 +75,42 @@ module corner_crop_2d() {
 // (not a plain square cut) so it lines up exactly with the edge bars'
 // own wrap. Same rail works as both top and bottom (mirror it for the
 // opposite-facing slots — see rack.scad).
+//
+// Per-slot floor orientation (2026-09-13): the 14 middle slots (normal
+// bars) keep floor-at-bottom/tenon-on-top — those bars get pushed on
+// from above (things set on the grate), so the floor stops them being
+// pushed down and out. The 2 end slots (edge bars, i=0 and i=15) flip
+// to floor-at-top/tenon-from-bottom — the edge bars aren't loaded from
+// above, they're pulled by the whole rack sliding against the oven
+// cavity's side groove, a different force direction, so the floor goes
+// on the side that actually resists it. rack_rail()'s own uniform-floor
+// version doesn't support mixing this per slot, so this is built
+// directly instead of calling it.
+TENON_WIDTH = 3.5;
+TENON_DEPTH = 2.5;
+TENON_TAPER = 0.8;
+CLEARANCE   = -0.1;
+
 module grate_rail() {
   intersection() {
-    rack_rail(outer_w, frame_width_mm, thickness, n_bars, bar_pitch, first_offset);
+    difference() {
+      cube([outer_w, frame_width_mm, thickness]);
+      for (i = [0 : n_bars - 1]) {
+        x = first_offset + i * bar_pitch;
+        flip_this_one = (i == 0 || i == n_bars - 1);
+        z0 = flip_this_one ? -1 : floor_thickness;
+        h  = thickness - floor_thickness + 1;
+        translate([x, 0, z0])
+          linear_extrude(height = h)
+            dovetail_tab_2d(
+              TENON_WIDTH + 2 * CLEARANCE,
+              TENON_DEPTH + CLEARANCE,
+              TENON_TAPER + CLEARANCE
+            );
+      }
+    }
     linear_extrude(height = thickness + 2)
-      translate([0, 0])
-        rounded_rect_2d(outer_w, outer_h, modular_corner_radius);
+      rounded_rect_2d(outer_w, outer_h, modular_corner_radius);
   }
 }
 
@@ -94,6 +124,10 @@ module grate_bar() {
 // where the rail sits, plus the lip on the outer edge. Wraps all the
 // way around the rail's end instead of butting a separate piece
 // against it.
+//
+// Tenons here sit at z=0 (floor-at-top, matching the flipped rail
+// slots at i=0/i=15 above) instead of z=floor_thickness like a normal
+// bar — see grate_rail()'s comment for why.
 module grate_edge_bar_left() {
   eps = 0.05;
   lip_w = end_lip_width_in * IN_TO_MM;
@@ -105,14 +139,14 @@ module grate_edge_bar_left() {
         cube([crop_x + 1, outer_h + 2, thickness + 2]);
     }
     // Tenon into the bottom rail (protrudes further -Y).
-    translate([first_offset, frame_width_mm, floor_thickness])
+    translate([first_offset, frame_width_mm, 0])
       rotate([0, 0, 180])
         linear_extrude(height = tenon_h)
-          dovetail_tab_2d(3.5, 2.5, 0.8);
+          dovetail_tab_2d(TENON_WIDTH, TENON_DEPTH, TENON_TAPER);
     // Tenon into the top rail (protrudes further +Y).
-    translate([first_offset, outer_h - frame_width_mm, floor_thickness])
+    translate([first_offset, outer_h - frame_width_mm, 0])
       linear_extrude(height = tenon_h)
-        dovetail_tab_2d(3.5, 2.5, 0.8);
+        dovetail_tab_2d(TENON_WIDTH, TENON_DEPTH, TENON_TAPER);
     // Lip on the outer (x<0) edge, spanning the same run as a normal bar.
     translate([-lip_w, frame_width_mm, thickness - lip_thickness_mm])
       cube([lip_w + eps, inner_h, lip_thickness_mm]);
