@@ -54,3 +54,12 @@ print_material: PLA           # PLA (default, gets thickened) | PETG (left alone
 No `measurements.yaml` exists yet for `projects/furniture-brackets/` — its
 `NOTES.md` measurement table is still blank. That's Milestone 0 (calipers on
 the real part), still open.
+
+**Output convention:** `--output` is caller-specified, not defaulted by the
+tool. Always point it at the *project's* output folder
+(`projects/furniture-brackets/output/`), never at a path under `pipeline/` —
+`pipeline/*/output/` is scratch/dev space for the tool itself, not where
+printable deliverables live. (Fixed 2026-09-13: the first two brackets had
+landed in `pipeline/bracket-gen/output/` instead of
+`projects/furniture-brackets/output/`, inconsistent with every other part in
+this repo.)
