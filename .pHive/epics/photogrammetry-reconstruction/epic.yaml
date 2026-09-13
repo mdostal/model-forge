@@ -1,0 +1,76 @@
+name: photogrammetry-reconstruction
+title: Photogrammetry pipeline — reconstruct the Tiny Land kitchenette, ideate attachments, true up to real measurements
+description: |
+  Kicked off 2026-09-13 alongside the tinyland-playset-kitchen printable-parts
+  work. Goal: use real-world capture (video/photo walkarounds) to reconstruct
+  3D models of physical objects worth designing for — starting with the Tiny
+  Land play kitchen itself — then use those models to ideate new printable
+  attachments (the odd rounded shelf sections on one side were called out
+  directly as a target), and eventually true the whole model up to exact
+  measured dimensions alongside the printable additions already in progress
+  (oven-grate-separated, oven-grate-half, baking-sheet handles, etc.).
+
+  This is explicitly the "model-forge's own capture/CAD/photogrammetry
+  pipeline" that dostal-3d-printing's ai-toolset-foundations epic deferred to
+  be planned here instead.
+
+  First story is already done: Apple Object Capture (RealityKit's
+  PhotogrammetrySession, via Apple's HelloPhotogrammetry sample) verified
+  working end-to-end on this M3 Max against a real 41s/124-frame walkaround
+  of the kitchenette. Produced a 50K-triangle textured USDZ in ~2 minutes.
+target_codebase: /Users/mdostal/Documents/work/model-forge
+methodology: classic
+version_bump: none
+sidecar_retention: committed
+
+git_flow:
+  base_branch: dev
+  branch_strategy: per-epic
+
+planning_team:
+  matched_tags: [greenfield-multi-area, personal-project, hardware-adjacent]
+  roster: [researcher, tpm]
+  per_tag_reasoning:
+    greenfield-multi-area: "No existing capture/reconstruction pipeline in this repo; new tool integration (Object Capture, possibly RealityScan later) plus design-ideation work"
+    hardware-adjacent: "Depends on real captured video/photos of a physical object and eventual physical measurement reconciliation, not pure software"
+  confidence: medium
+  gate_decisions:
+    design_discussion_review: skipped-condensed-per-user-request
+    hv_gate: skipped-condensed-per-user-request
+    structured_outline: skipped-rolling-wave-scope
+
+stories:
+  - id: object-capture-pipeline-verified
+    title: Verify Apple Object Capture reconstructs a real object end-to-end on this hardware
+    complexity: medium
+    status: done
+    depends_on: []
+    notes: |
+      Done 2026-09-13. Fetched Apple's HelloPhotogrammetry sample (x86_64
+      binary, runs under Rosetta on M3 Max — no native build needed yet).
+      124 frames extracted via ffmpeg (3fps from a 41s walkaround video) at
+      projects/tinyland-playset-kitchen/reference-photos/kitchenette-scan-2026-09-11/frames/.
+      Ran --detail medium: 49,999 triangles, 25,148 vertices, 3 texture maps,
+      2:05 wall clock. Output at .../kitchenette-scan-2026-09-11/output/kitchenette_medium.usdz
+      (28.5MB). Verified by unzipping and inspecting the mesh directly, not
+      just trusting exit code 0.
+  - id: reconstruction-visual-validation-and-full-detail
+    title: Visually confirm the medium-detail scan is plausible; try full/raw detail if attachment ideation needs finer features
+    complexity: low
+    depends_on: [object-capture-pipeline-verified]
+  - id: native-object-capture-build
+    title: Build HelloPhotogrammetry natively (arm64) instead of x86_64-under-Rosetta, if this becomes a repeated workflow
+    complexity: low
+    depends_on: [object-capture-pipeline-verified]
+  - id: shelf-attachment-ideation
+    title: Ideate printable attachments for the kitchenette's rounded shelf sections using the reconstructed model
+    complexity: medium
+    depends_on: [reconstruction-visual-validation-and-full-detail]
+  - id: true-up-to-real-measurements
+    title: Reconcile the reconstructed model's scale/dimensions against real caliper/tape measurements
+    complexity: medium
+    depends_on: [reconstruction-visual-validation-and-full-detail]
+  - id: reality-scan-alternative-eval
+    title: "If Object Capture's quality/detail hits a ceiling: install and try RealityScan (Epic Games, free) as the alternative capture/reconstruction path"
+    complexity: medium
+    depends_on: [reconstruction-visual-validation-and-full-detail]
