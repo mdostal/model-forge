@@ -16,11 +16,19 @@
 // inside the middle piece run along Y — a 90-degree relationship
 // between the two joint systems, as asked for.
 //
-// Cut position (33.89mm from each edge) lands exactly at the boundary
-// between bar 2 and the gap after it — no bar gets sliced, and it's
-// comfortably past the 25.4mm corner-radius zone so there's solid,
-// full-thickness frame material for the tenon (no fragile margin like
-// the old wrap-around edge bar had).
+// Bug fixed 2026-09-13, found the hard way: cut position used to be at
+// 33.89mm, the boundary between bar 2 and the GAP after it -- picked to
+// avoid slicing a bar. That was backwards. A gap is empty space for the
+// full height except the thin 6.35mm frame bands top and bottom, so a
+// dovetail spanning most of the height at that x-position was reaching
+// into open air for nearly its entire length -- "dovetailing to
+// nothing." Fixed by cutting through the CENTER of bar 3 instead
+// (46.42mm) -- a bar runs the full inner height, so slicing through its
+// width still leaves continuous material top-to-bottom on both sides
+// of the cut. This is the opposite lesson from the earlier horizontal
+// grate-halves cut (land in a gap there, since bars run parallel to
+// that cut and landing in one bar's own gap avoids severing any bar
+// entirely) -- direction relative to the bars matters.
 //
 // Fill orientation, confirmed twice: the two ROUNDED EDGE pieces carry
 // the tab, positioned fill-on-top / tenon-from-bottom (z=0 up to
@@ -59,19 +67,20 @@ lip_thickness_mm = 2.5;
    big, tight-fitting dovetail across almost the full height is
    simpler and stronger, same principle as the Bambu sliding-dovetail.
    190mm leaves ~19mm margin on each end within the piece's 228.6mm
-   height; checked that x=cut_x=33.89 is already 8.49mm past the
-   25.4mm corner-radius zone, so full height is available there, no
-   tapering-margin concern like the old wrap-around edge bar had. */
+   height. depth+taper (4mm) must stay under bar 3's own half-width
+   (5mm from the cut center to the bar's own edge) or the tab reaches
+   past the bar into the next gap over — same "dovetailing to nothing"
+   mistake, just smaller. */
 seam_tenon_width = 190;
-seam_tenon_depth = 6;
-seam_tenon_taper = 2;
+seam_tenon_depth = 3;
+seam_tenon_taper = 1;
 seam_clearance   = -0.1;   // validated winning value
 floor_thickness  = 1;      // matches the bar/rail mortise floor elsewhere
 
 IN_TO_MM = 25.4;
 outer_w = outer_width_in * IN_TO_MM;
 outer_h = outer_height_in * IN_TO_MM;
-cut_x = 33.89; // see header comment — lands in the gap after bar 2
+cut_x = 46.42; // see header comment — center of bar 3, not a gap boundary
 tenon_h = thickness_mm - floor_thickness;
 BIG = 1000;
 
