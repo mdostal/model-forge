@@ -52,10 +52,19 @@ lip_width_in     = 0.12;
 end_lip_width_in = 0.5;
 lip_thickness_mm = 2.5;
 
-/* [Seam joint] */
-seam_tenon_width = 5;
-seam_tenon_depth = 4;
-seam_tenon_taper = 1.2;
+/* [Seam joint — ONE large dovetail spanning most of the seam height,
+   not a small centered tab. We no longer need many distributed joints
+   here (that was specifically for cutting through 16 repeated bars,
+   which doesn't apply to this plain frame-to-frame seam) — a single
+   big, tight-fitting dovetail across almost the full height is
+   simpler and stronger, same principle as the Bambu sliding-dovetail.
+   190mm leaves ~19mm margin on each end within the piece's 228.6mm
+   height; checked that x=cut_x=33.89 is already 8.49mm past the
+   25.4mm corner-radius zone, so full height is available there, no
+   tapering-margin concern like the old wrap-around edge bar had. */
+seam_tenon_width = 190;
+seam_tenon_depth = 6;
+seam_tenon_taper = 2;
 seam_clearance   = -0.1;   // validated winning value
 floor_thickness  = 1;      // matches the bar/rail mortise floor elsewhere
 
