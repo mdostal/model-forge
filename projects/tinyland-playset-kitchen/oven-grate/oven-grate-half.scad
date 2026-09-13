@@ -74,15 +74,23 @@ module full_grate() {
   );
 }
 
-module tab_at(y_center, width, depth, taper) {
-  translate([cut_x, y_center, 0])
+// z0: where the tenon's own z-range starts. z0=0 -> floor-at-top
+// (tenon from the bottom, solid backing at z=tenon_h..thickness).
+// z0=floor_thickness -> floor-at-bottom (tenon from the top, solid
+// backing at z=0..floor_thickness) -- the normal-bar convention.
+module tab_at(y_center, width, depth, taper, z0 = 0) {
+  translate([cut_x, y_center, z0])
     rotate([0, 0, -90])
       linear_extrude(height = tenon_h)
         dovetail_tab_2d(width, depth, taper);
 }
 
-module slot_at(y_center, width, depth, taper) {
-  translate([cut_x, y_center, -1])
+module slot_at(y_center, width, depth, taper, z0 = 0) {
+  // z0=0: start 1mm below (z=-1) for a clean overshoot through the
+  // bottom face. z0=floor_thickness: start exactly there instead --
+  // the same +1mm extrusion height then overshoots through the TOP
+  // face by 1mm (floor_thickness + tenon_h + 1 = thickness + 1).
+  translate([cut_x, y_center, z0 == 0 ? -1 : z0])
     rotate([0, 0, -90])
       linear_extrude(height = tenon_h + 1)
         dovetail_tab_2d(
@@ -92,6 +100,8 @@ module slot_at(y_center, width, depth, taper) {
         );
 }
 
+// Band tabs swapped to floor-at-bottom (z0=floor_thickness) per direct
+// correction — main bar tab stays floor-at-top (z0=0, unchanged).
 module left_half() {
   union() {
     intersection() {
@@ -99,9 +109,9 @@ module left_half() {
       translate([-BIG, -BIG, -1])
         cube([BIG + cut_x, outer_h + 2 * BIG, thickness_mm + 2]);
     }
-    tab_at(outer_h / 2, main_tenon_width, main_tenon_depth, main_tenon_taper);
-    tab_at(frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper);
-    tab_at(outer_h - frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper);
+    tab_at(outer_h / 2, main_tenon_width, main_tenon_depth, main_tenon_taper, 0);
+    tab_at(frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper, floor_thickness);
+    tab_at(outer_h - frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper, floor_thickness);
   }
 }
 
@@ -112,9 +122,9 @@ module right_half() {
       translate([cut_x, -BIG, -1])
         cube([outer_w - cut_x + BIG, outer_h + 2 * BIG, thickness_mm + 2]);
     }
-    slot_at(outer_h / 2, main_tenon_width, main_tenon_depth, main_tenon_taper);
-    slot_at(frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper);
-    slot_at(outer_h - frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper);
+    slot_at(outer_h / 2, main_tenon_width, main_tenon_depth, main_tenon_taper, 0);
+    slot_at(frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper, floor_thickness);
+    slot_at(outer_h - frame_width_mm / 2, band_tenon_width, band_tenon_depth, band_tenon_taper, floor_thickness);
   }
 }
 
