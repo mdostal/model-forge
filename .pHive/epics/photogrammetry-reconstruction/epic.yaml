@@ -57,7 +57,22 @@ stories:
   - id: reconstruction-visual-validation-and-full-detail
     title: Visually confirm the medium-detail scan is plausible; try full/raw detail if attachment ideation needs finer features
     complexity: low
+    status: done
     depends_on: [object-capture-pipeline-verified]
+    notes: |
+      Done 2026-09-13. First full-video reconstruction had the room bleeding
+      in and only half the toy reconstructed cleanly. Root cause found via
+      Gemini (asked to actually watch the video, not just frame-diff
+      heuristics): the object was physically picked up and rotated TWICE
+      (~00:10 and ~00:30), not zero times — breaking Object Capture's rigid-
+      scene assumption. Video re-split into 3 clean segments per Gemini's
+      timestamps; user independently confirmed the pattern (segment 3's
+      content, while not a true object move, is a weaker viewing angle).
+      Segments 1 (27 frames) and 2 (51 frames) both hit full detail
+      (~50K faces, single clean mesh) and visually confirmed "better" by
+      user. Segment 3 (30 frames, top-down/alt angle) came in at only 72%
+      poly count — weaker viewing angle, not a frame-count problem (it had
+      more frames than segment 1). Outputs: output/kitchenette_seg{1,2,3}.usdz.
   - id: native-object-capture-build
     title: Build HelloPhotogrammetry natively (arm64) instead of x86_64-under-Rosetta, if this becomes a repeated workflow
     complexity: low
