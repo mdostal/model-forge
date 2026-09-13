@@ -101,18 +101,75 @@ module rack_rail(
   }
 }
 
-// A plain straight side rail (no mortises — bars don't attach to it)
-// running along `length`, with an optional lip flange on its outer
-// (x<0) edge for docking into the oven cavity's support-rail groove,
-// same mechanism as tray.scad/grate.scad's lip. Corner-to-corner
-// joinery between this and the long rails (rack_rail) isn't designed
-// yet — this piece alone doesn't connect to anything.
-module rack_side_rail(length, rail_width, thickness, lip_width = 0, lip_thickness = 0) {
-  eps = 0.05;
+// 2D wing profile: flat on the LEFT edge (x=0, where it joins a bar's
+// own body), rounded on the RIGHT edge (the outer, x=width side).
+// Built as a hull of two near-zero-radius points pinning the flat left
+// edge and two real-radius circles rounding the right edge — same
+// hull-of-circles technique as tray.scad's rounded_rect_2d.
+//
+// fillet_r must stay <= width/2, or the fillet circles (centered at
+// width-fillet_r) bulge past x=0 and the "flat" edge disappears —
+// confirmed: fillet_r=5 on width=6.35 put the circle center only
+// 1.35mm from the edge with a 5mm radius, extending to x=-3.65 instead
+// of stopping at x=0.
+module edge_wing_2d(width, height, fillet_r) {
+  hull() {
+    translate([0, 0]) circle(r = 0.01, $fn = 8);
+    translate([0, height]) circle(r = 0.01, $fn = 8);
+    translate([width - fillet_r, fillet_r]) circle(r = fillet_r, $fn = 32);
+    translate([width - fillet_r, height - fillet_r]) circle(r = fillet_r, $fn = 32);
+  }
+}
+
+// An edge bar: identical tenon mechanism to rack_bar (dovetails into
+// the SAME rail mortises, at the SAME pitch position as any other bar)
+// but wider — extended out to the frame's true outer edge with a
+// rounded outer corner, plus the lip flange for docking into the oven
+// cavity's support rail. Replaces a separate perpendicular side-rail
+// piece entirely: "why are you separating the side ones from the rail
+// next to it -- we have 14 normal rails and 2 side rails with a nice
+// rounded taper." No new joint type — same dovetail-into-mortise
+// mechanism as every other bar, just a wider body on the outer end.
+//
+// wing_width: how far the wing extends beyond the bar's own bar_width
+// (normally = frame_width_mm, reaching exactly to the true frame edge).
+// Mirror this module (mirror([1,0,0]) after translating to the bar's
+// own local origin) to build the RIGHT-side edge bar from the same code.
+module rack_edge_bar(
+  span,
+  bar_width,
+  thickness,
+  wing_width,
+  fillet_r,
+  lip_width       = 0,
+  lip_thickness   = 0,
+  tenon_width     = DEFAULT_TENON_WIDTH,
+  tenon_depth     = DEFAULT_TENON_DEPTH,
+  tenon_taper     = DEFAULT_TENON_TAPER,
+  floor_thickness = DEFAULT_FLOOR_THICKNESS
+) {
+  eps = 0.3; // same coincident-face overlap as rack_bar's own base cube
   union() {
-    cube([rail_width, length, thickness]);
+    rack_bar(span, bar_width, thickness, tenon_width, tenon_depth, tenon_taper, floor_thickness);
+    // Wing overlaps eps into the bar's own core (positive x) instead of
+    // stopping exactly flush at x=0 -- same class of bug as the
+    // bar/rail coincident face fixed earlier.
+    //
+    // Bug fixed 2026-09-13: mirroring the 2D profile BEFORE
+    // linear_extrude (mirror([1,0]) on edge_wing_2d itself) inverts the
+    // polygon winding -- the resulting solid was watertight on its own
+    // but with is_winding_consistent=False and NEGATIVE volume. Unioned
+    // with the bar's normal-winding solid, this silently produced a
+    // mesh missing the wing entirely (confirmed: OpenSCAD's own "mesh
+    // is not closed" warning, and the exported STL had no wing
+    // geometry at all). Fix: mirror the 3D solid AFTER extrusion
+    // instead, which OpenSCAD's dedicated 3D mirror handles correctly.
+    translate([eps, 0, 0])
+      mirror([1, 0, 0])
+        linear_extrude(height = thickness)
+          edge_wing_2d(wing_width, span, fillet_r);
     if (lip_width > 0 && lip_thickness > 0)
-      translate([-lip_width, 0, thickness - lip_thickness])
-        cube([lip_width + eps, length, lip_thickness]);
+      translate([-wing_width - lip_width + eps, 0, thickness - lip_thickness])
+        cube([lip_width, span, lip_thickness]);
   }
 }
