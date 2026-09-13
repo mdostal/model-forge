@@ -4,10 +4,15 @@
 // auto-fit bar pattern (16 bars, 10mm wide, 7.537mm gaps) so this sits
 // in the exact same footprint.
 //
-// The rails (285.75mm) still exceed the 256mm bed by ~30mm -- that
-// splice is meant to be done with Bambu Studio's own sliding Dovetail
-// cut mode (the tool and orientation already validated and preferred),
-// not hand-rolled here. Import rail.stl, use the Cut tool on it.
+// Bug fixed 2026-09-13: the rail (285.75mm) doesn't actually need a
+// cut. It's only 6.35mm wide -- rotated ~45 degrees on the bed, its
+// bounding box drops to ~206.5 x 206.5mm, well inside the 256mm bed
+// (checked: it fits anywhere from ~28 to ~62 degrees, not just exactly
+// 45). This is the same bed-diagonal rotation trick discussed earlier
+// for the full grate panel, which correctly does NOT help there (it's
+// 235mm wide, too wide for rotation to save it) -- just hadn't been
+// re-applied to this much narrower rail. Rotate it in Bambu Studio and
+// print it in one piece; no Cut Tool step needed here at all.
 //
 // The 16 bars (215.9mm each) all fit the bed individually and are laid
 // out here as one printable plate.
