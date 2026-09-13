@@ -1,9 +1,16 @@
-// Tiny Land oven grate v2 — rack-construction proof piece. 2 short bars
-// dovetailing into a bottom rail and a top rail, at the validated
-// -0.1mm clearance. Small and fast to print, just to prove the
-// mechanism (alignment, tenon-into-slot fit, and that the whole thing
-// fuses into one connected assembly) before scaling to the real 16-bar,
-// full-length grate.
+// Tiny Land oven grate v2 — rack-construction proof piece.
+//
+// Bug fixed 2026-09-13: the first version union()'d the rail and bars
+// together in OpenSCAD, so it printed as one pre-fused solid -- there
+// was nothing left to actually test, since the joint was assembled in
+// software instead of by hand. Same mistake class as the sealed test
+// comb from 2026-09-12: a "test" only tests something if the pieces
+// print SEPARATE and get assembled for real.
+//
+// Now prints 3 separate objects: one rail (2 slots) and two bars (each
+// with a tenon on both ends). Press a bar's tenon into a rail slot by
+// hand to actually test the -0.1mm fit before scaling to the real
+// 16-bar, full-length grate.
 use <model-forge/rack.scad>
 
 rail_length   = 50;
@@ -15,19 +22,13 @@ n_bars        = 2;
 bar_pitch     = 20;
 first_offset  = 10;
 
-union() {
-  // Bottom rail — slots face up (+Y, toward the bars).
-  translate([0, rail_width, 0])
-    mirror([0, 1, 0])
-      rack_rail(rail_length, rail_width, thickness, n_bars, bar_pitch, first_offset);
+// The rail — slots open on its y=0 edge (rack_rail's natural
+// orientation), so a bar's tenon presses straight in from above.
+rack_rail(rail_length, rail_width, thickness, n_bars, bar_pitch, first_offset);
 
-  // Bars.
-  for (i = [0 : n_bars - 1])
-    translate([first_offset + i * bar_pitch - bar_width / 2, rail_width, 0])
-      rack_bar(span, bar_width, thickness);
+// Two separate bars, laid out beside the rail with clear gaps.
+translate([0, rail_width + 15, 0])
+  rack_bar(span, bar_width, thickness);
 
-  // Top rail — slots face down (-Y, toward the bars), which is
-  // rack_rail's natural orientation, no mirror needed.
-  translate([0, rail_width + span, 0])
-    rack_rail(rail_length, rail_width, thickness, n_bars, bar_pitch, first_offset);
-}
+translate([bar_width + 15, rail_width + 15, 0])
+  rack_bar(span, bar_width, thickness);
