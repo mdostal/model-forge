@@ -27,6 +27,11 @@ frame_width_mm = 6.35;
 bar_width_mm   = 10;
 n_bars         = 16;
 
+/* [Side rails — no bar mortises, just close out the left/right edges
+   and carry the lip that docks into the oven cavity's support rail] */
+end_lip_width_in = 0.5;  // matches the short-edge lip from oven-tray.scad/oven-grate.scad
+lip_thickness_mm = 2.5;  // matches the validated 2.5mm rail-fit thickness
+
 IN_TO_MM = 25.4;
 outer_w = outer_width_in * IN_TO_MM;
 outer_h = outer_height_in * IN_TO_MM;
@@ -51,6 +56,12 @@ module grate_bar() {
   rack_bar(inner_h, bar_width_mm, thickness);
 }
 
+// A left/right side rail — no mortises, just carries the lip. Corner
+// joinery to the long rails isn't designed yet (open question).
+module grate_side_rail() {
+  rack_side_rail(outer_h, frame_width_mm, thickness, end_lip_width_in * IN_TO_MM, lip_thickness_mm);
+}
+
 grate_rail();
 
 // All 16 bars, tiled on one plate below the rail.
@@ -58,3 +69,13 @@ bar_gap = 3;
 for (i = [0 : n_bars - 1])
   translate([i * (bar_width_mm + bar_gap), frame_width_mm + 20, 0])
     grate_bar();
+
+// Both side rails, off to the side. Each one's own footprint (including
+// the lip flange reaching end_lip_width beyond its rail_width) is about
+// frame_width_mm + end_lip_width_in*IN_TO_MM wide -- space them by more
+// than that so they don't overlap into one fused blob.
+side_rail_pitch = frame_width_mm + end_lip_width_in * IN_TO_MM + 10;
+translate([outer_w + 20, 0, 0])
+  grate_side_rail();
+translate([outer_w + 20 + side_rail_pitch, 0, 0])
+  grate_side_rail();
