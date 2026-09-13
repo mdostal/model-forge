@@ -17,3 +17,10 @@ __pycache__/
 
 # Keep: reference-photos (our own), NOTES, docs, source scripts, generated STLs we own
 !projects/**/reference-photos/**
+
+# Keep: printable output (STL/3MF) so the public repo is usable without
+# re-running OpenSCAD -- checked 2026-09-13, everything here is a few
+# hundred KB at most, total well under GitHub's 100MB per-file limit,
+# no LFS needed.
+!pipeline/**/output/**
+!projects/**/output/**
