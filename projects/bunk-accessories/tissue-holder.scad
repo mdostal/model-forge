@@ -1,5 +1,5 @@
 // Bunk tissue box holder: an open-top tray that slides onto rail clips
-// (clip.scad) and holds a flat tissue box lying down, long side along the
+// (clip.scad), lowered on from above, and holds a flat tissue box lying down, long side along the
 // rail, so tissues pull from its top. A hole in the floor lets you push
 // the box up to swap it.
 //
@@ -29,7 +29,7 @@ clip_pitch = 140; // clip spacing when using 2; must miss the bed's posts
 /* [Fit] */
 dt_clear = 0.25;
 
-part = "holder"; // [holder, assembly]
+part = "holder"; // [holder, assembly, rails, clips, mounted]
 
 /* [Hidden] */
 eps = 0.01;
@@ -39,8 +39,8 @@ iw = box_w + box_clear;
 ol = il + 2 * tray_wall;
 y0 = dt_block_d(dt_clear) - eps;
 ow = iw + 2 * tray_wall;
-bot = -dt_floor();
 th = floor_t + box_h * hold;             // tray height
+bot = dt_roof() - th;                    // tray top flush with the socket roof
 xs = clips >= 2 ? [-clip_pitch / 2, clip_pitch / 2] : [0];
 
 module win(w, h, len) {
@@ -68,6 +68,8 @@ module tray() {
   }
 }
 
-module holder() { with_mounts(max(th - floor_t, 50), dt_clear, xs) tray(); }
+module holder() { with_mounts(-bot, dt_clear, xs) tray(); }
 
-if (part == "assembly") bunk_assembly(xs) holder(); else holder();
+if (part == "assembly") bunk_assembly(xs) holder();
+else if (part == "holder") holder();
+else bunk_piece(part, xs) holder();

@@ -1,5 +1,5 @@
-// Bunk cubby: a customizable open-top bin that slides onto rail clips
-// (clip.scad). Remotes, glasses, books, toys: set the inside size, add
+// Bunk cubby: a customizable open-top bin that hangs on rail clips
+// (clip.scad), lowered on from above. Remotes, glasses, books, toys: set the inside size, add
 // dividers, and pick 1 or 2 clips.
 //
 // Print upright as modeled, no supports.
@@ -23,7 +23,7 @@ clip_pitch = 120; // clip spacing when using 2; must miss the bed's posts
 /* [Fit] */
 dt_clear = 0.25;
 
-part = "cubby"; // [cubby, assembly]
+part = "cubby"; // [cubby, assembly, rails, clips, mounted]
 
 /* [Hidden] */
 $fn = 32;
@@ -32,8 +32,8 @@ eps = 0.01;
 ow = width + 2 * wall;
 od = depth + 2 * wall;
 y0 = dt_block_d(dt_clear) - eps;
-bot = -dt_floor();
 oh = floor_t + height;
+bot = dt_roof() - oh;  // rim flush with the socket roof
 xs = clips >= 2 ? [-clip_pitch / 2, clip_pitch / 2] : [0];
 
 module rbox(w, d, h, r) {
@@ -57,6 +57,8 @@ module bin() {
         cube([wall, depth + 2 * eps, height * 0.85]);
 }
 
-module cubby() { with_mounts(max(height, 50), dt_clear, xs) bin(); }
+module cubby() { with_mounts(-bot, dt_clear, xs) bin(); }
 
-if (part == "assembly") bunk_assembly(xs) cubby(); else cubby();
+if (part == "assembly") bunk_assembly(xs) cubby();
+else if (part == "cubby") cubby();
+else bunk_piece(part, xs) cubby();

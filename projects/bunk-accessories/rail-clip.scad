@@ -2,9 +2,17 @@
 //
 // A rail clip hooks over a bed's top guardrail rail. Its plate carries a
 // vertical dovetail tail; every accessory (cup, tissue box, cubby, and
-// later a wardrobe rod or hooks) has a matching socket on its back and
-// slides down onto the tail from above until the tail's bottom end sits
-// on the socket floor. Wide accessories take two or more clips.
+// later a wardrobe rod or hooks) has a matching socket on its back. The
+// socket is open at the bottom and capped by a roof at the top: you lower
+// the accessory from above, the tail enters through the socket's bottom
+// mouth, and the roof comes down onto the tail's top end. Weight and a
+// dropped cup push the roof harder onto the tail, so a load can't slide
+// the accessory off; only lifting it does. Wide accessories take two or
+// more clips.
+//
+// (Before 2026-11-12 the stop was a floor at the socket's bottom, which
+// meant the accessory went on by being pushed UP and any downward load
+// slid it off. pipeline/print-check's retention check now fails that.)
 //
 // Defaults are the owner's caliper readings (2026-11-08) of a Bellemave
 // twin low loft (FST00301-TB-AH): top rail 20.74 front-to-back x 20.38
@@ -18,15 +26,16 @@
 // part turned the other way round.
 //
 // Accessory axes: X along the rail, Y away from the clip, Z up. The
-// accessory's back face is y = 0 and the socket floor (where the tail's
-// foot rests) is z = 0. Everything below z = 0 is the socket floor.
+// accessory's back face is y = 0 and the underside of the socket roof
+// (where the tail's top end bears) is z = 0. The roof is z = 0 to
+// dt_roof(); the accessory hangs below.
 
 // ---- dovetail interface (keep these fixed so all parts interchange) ----
 function dt_base() = 16;    // tail width at the plate
 function dt_tip() = 22;     // tail width at its face
 function dt_depth() = 6;    // how far the tail stands off the plate
 function dt_wall() = 3;     // accessory material around the socket
-function dt_floor() = 2.4;  // socket floor under the tail's foot
+function dt_roof() = 2.4;   // socket roof over the tail's top end; carries the load
 function dt_block_w(c) = dt_tip() + 2 * c + 2 * dt_wall();
 function dt_block_d(c) = dt_depth() + c + dt_wall();
 
@@ -49,20 +58,26 @@ module dt_socket(z0, z1, c) {
 }
 
 // Give an accessory its mount block(s) and socket(s). Children are the
-// accessory body, starting at y = dt_block_d(c). h is the block height
-// above the socket floor; xs are the socket centers along X (a clip each).
+// accessory body, starting at y = dt_block_d(c). The block runs from
+// z = -h up to the roof's top (dt_roof()); its socket is open at the
+// bottom and stops at the roof. h is how much tail the socket takes; a
+// longer tail just shows below the block. xs are the socket centers along
+// X (a clip each).
 module with_mounts(h, c = 0.25, xs = [0]) {
   bw = dt_block_w(c);
   bd = dt_block_d(c);
+  assert(h >= 30, str("with_mounts: only ", h, " mm of tail engaged; 30 is the minimum"));
   difference() {
     union() {
       children();
-      for (x = xs) translate([x - bw / 2, 0, -dt_floor()]) cube([bw, bd + 0.01, h + dt_floor()]);
+      for (x = xs) translate([x - bw / 2, 0, -h]) cube([bw, bd + 0.01, h + dt_roof()]);
     }
-    for (x = xs) translate([x, 0, 0]) dt_socket(0, h + 1, c);
-    // lead-in chamfer at each socket mouth
-    for (x = xs) translate([x, 0, h - 1.5])
-      linear_extrude(1.51, scale = 1.25) offset(delta = 0.25) dt_profile();
+    for (x = xs) translate([x, 0, 0]) dt_socket(-h - 1, 0, c);
+    // 45 deg lead-in chamfer at each socket's bottom mouth
+    for (x = xs) translate([x, 0, 0]) hull() {
+      translate([0, 0, -h - 0.01]) linear_extrude(0.01) offset(delta = c + 1.2) dt_profile();
+      translate([0, 0, -h + 1.2]) linear_extrude(0.01) offset(delta = c) dt_profile();
+    }
   }
 }
 
@@ -93,8 +108,8 @@ module rail_clip(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54,
 }
 
 // place an accessory (in accessory axes) on a default clip at x
-module on_clip(x = 0, clear = 0.4, wall = 3, rail_gap = 80.54, brace = 7.5) {
-  translate([x, clip_mount_y(clear, wall), clip_foot(rail_gap, brace)])
+module on_clip(x = 0, clear = 0.4, wall = 3, rail_h = 20.38) {
+  translate([x, clip_mount_y(clear, wall), clip_top(rail_h, wall)])
     children();
 }
 
@@ -112,4 +127,11 @@ module bunk_assembly(xs = [0]) {
   rail_ghost();
   for (x = xs) color("orchid") translate([x, 0, 0]) rail_clip();
   color("plum") on_clip() children();
+}
+
+// pieces of the assembly one at a time, for the print-check tool
+module bunk_piece(which, xs = [0]) {
+  if (which == "rails") rail_ghost();
+  else if (which == "clips") for (x = xs) translate([x, 0, 0]) rail_clip();
+  else if (which == "mounted") on_clip() children();
 }
