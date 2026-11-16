@@ -11,6 +11,11 @@ retention:
     moving: {scad: cup-holder.scad, part: clips}
     loads: [-z, +y, -y]
     allow_free: [+x, -x]          # it can slide along the rail; nothing pushes it that way hard
+  - name: hook clip on the top two rails
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: hook}}
+    loads: [-z, +z, +y, -y]       # cup weight, a bump from below, pulls either way
+    allow_free: [+x, -x]
   - name: cup holder on its clip
     fixed: [{scad: cup-holder.scad, part: rails}, {scad: cup-holder.scad, part: clips}]
     moving: {scad: cup-holder.scad, part: mounted}
@@ -92,6 +97,7 @@ seat:
     proud: [20, 120]
 
 printability:
+  - {name: hook clip as printed, part: {scad: clip.scad, define: {catch: hook}}}
   - {name: clip, part: {scad: clip.scad, part: clip}}
   - {name: cup holder, part: {scad: cup-holder.scad, part: holder}}
   - {name: cubby, part: {scad: cubby.scad, part: cubby}}
