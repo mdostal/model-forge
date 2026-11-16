@@ -211,6 +211,54 @@ def check_seat(item, base, cache, rep):
 
 # ---------- printability ----------
 
+def flat_underside(mesh, patch, step=0.25, probe=0.3):
+    """Classify one flat, downward-facing patch. A bridge has material under
+    its edges on opposite sides; a ledge is held on one side only and the
+    rest hangs over air. Returns ("bridge", span) or ("ledge", reach)."""
+    import trimesh
+    z = float(patch.vertices[:, 2].mean())
+    counts = trimesh.grouping.group_rows(patch.edges_sorted, require_count=1)
+    edge_faces = patch.edges_face[counts]
+    segs = patch.edges[counts]
+    pts, anchored = [], []
+    for (i, j), f in zip(segs, edge_faces):
+        a, b = patch.vertices[i], patch.vertices[j]
+        third = patch.vertices[[v for v in patch.faces[f] if v not in (i, j)][0]]
+        d = b[:2] - a[:2]; L = float(np.hypot(*d))
+        if L < 1e-6:
+            continue
+        out = np.array([d[1], -d[0]]) / L
+        if np.dot(third[:2] - a[:2], out) > 0:
+            out = -out
+        k = max(2, int(L / step) + 1)
+        for t in (np.arange(k) + 0.5) / k:
+            q = a[:2] + t * d
+            pts.append(q)
+            anchored.append([q[0] + out[0] * probe, q[1] + out[1] * probe, z - probe])
+    if not pts:
+        return "bridge", 0.0
+    pts = np.array(pts)
+    held = mesh.contains(np.array(anchored))
+    A = pts[held]
+    inner = np.vstack([patch.triangles_center[:, :2], pts])
+    if len(A) == 0:
+        return "ledge", float(np.max(np.ptp(patch.vertices[:, :2], axis=0)))
+    worst_ledge, worst_span = 0.0, 0.0
+    for p in inner:
+        v = A - p; dist = np.hypot(v[:, 0], v[:, 1])
+        i = int(np.argmin(dist)); dmin = float(dist[i])
+        if dmin < 1e-6:
+            continue
+        u = v / np.maximum(dist, 1e-9)[:, None]
+        pair = (u @ u.T) < -0.87                # two anchored edges on opposite sides (> 150 deg apart)
+        if pair.any():
+            worst_span = max(worst_span, float(np.where(pair, dist[:, None] + dist[None, :], np.inf).min()))
+        else:
+            worst_ledge = max(worst_ledge, dmin)
+    # corners beside an anchored edge read a few tenths; only a real overhang counts
+    return ("ledge", worst_ledge) if worst_ledge > 0.5 else ("bridge", worst_span)
+
+
 def check_printability(item, base, cache, rep):
     name = item["name"]
     mesh, _ = export(item["part"], base, cache)
@@ -226,13 +274,14 @@ def check_printability(item, base, cache, rep):
     bridge = above & (n[:, 2] < -0.99)
     steep = above & (n[:, 2] < -0.71) & ~bridge
     data = {"steep_mm2": float(a[steep].sum()), "bridge_mm2": float(a[bridge].sum())}
-    spans = []
+    spans, ledges = [], []
     if bridge.any():
         sub = mesh.submesh([np.where(bridge)[0]], append=True)
         for p in sub.split(only_watertight=False):
-            ext = p.bounds[1][:2] - p.bounds[0][:2]
-            spans.append(float(min(ext)))
+            kind, size = flat_underside(mesh, p)
+            (spans if kind == "bridge" else ledges).append(size)
     data["bridge_spans_mm"] = sorted(spans, reverse=True)[:5]
+    data["ledge_reach_mm"] = sorted(ledges, reverse=True)[:5]
     limit = float(item.get("steep_limit_mm2", 2.0))
     if data["steep_mm2"] > limit:
         rep.add("WARN", f"printability / {name}", f"{data['steep_mm2']:.0f} mm2 overhangs past 45 deg; needs supports or a chamfer", data)
@@ -240,10 +289,17 @@ def check_printability(item, base, cache, rep):
     long = [s for s in spans if s > max_span]
     if long:
         rep.add("WARN", f"printability / {name}", f"bridge spans {long[0]:.0f} mm (limit {max_span:.0f})", data)
-    if mesh.is_watertight and bodies == want and data["steep_mm2"] <= limit and not long:
+    max_ledge = float(item.get("max_ledge_mm", 1.2))
+    far = [s for s in ledges if s > max_ledge]
+    if far:
+        rep.add("WARN", f"printability / {name}", f"a flat ledge sticks out {far[0]:.1f} mm over air with nothing on its far side "
+                f"(limit {max_ledge:.1f}); it will curl and the nozzle can knock the part off. Chamfer it to 45 deg, shorten it, or turn the part", data)
+    if mesh.is_watertight and bodies == want and data["steep_mm2"] <= limit and not long and not far:
         msg = "watertight, one body, no overhangs past 45 deg" if want == 1 else f"watertight, {want} bodies, no overhangs past 45 deg"
         if spans:
             msg += f"; bridges up to {max(spans):.0f} mm"
+        if ledges:
+            msg += f"; ledges up to {max(ledges):.1f} mm"
         rep.add("PASS", f"printability / {name}", msg, data)
 
 

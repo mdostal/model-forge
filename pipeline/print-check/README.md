@@ -15,7 +15,7 @@ It needs `openscad` on PATH (or set `OPENSCAD`), plus the Python packages trimes
 |---|---|---|
 | `retention` | Puts the mounted part where it sits in use, then slides it up to 30 mm in each of the six directions to find which ways are free. | Any direction in `loads` is free; the `install` direction isn't free; the parts overlap where assembled. Other free directions WARN unless listed in `allow_free`. |
 | `seat` | Lowers a reference object (base width, top width, height) into a receptacle at `at`. That can be `[x, y]` or `echo:<name>` for a value the .scad echoes. | The object wedges on a taper or rim instead of standing on a flat floor, or stands less than `proud[0]` mm above the rim. |
-| `printability` | Checks the exported part in its print orientation. | It isn't watertight, or the body count is wrong. WARNs for faces overhanging past 45° and bridges longer than `max_bridge_mm`. |
+| `printability` | Checks the exported part in its print orientation. | It isn't watertight, or the body count is wrong. WARNs for faces overhanging past 45°, bridges (flat undersides held at both ends) longer than `max_bridge_mm`, and ledges (flat undersides held on one side only) reaching more than `max_ledge_mm`, 1.2 by default. A 2 mm ledge on a tall clip curled and spaghettied twice on 2026-11-15. |
 
 Every part spec is `{scad, part?, define?}`. `part` is passed as `-D part="..."`, so each model exposes its pieces (for example `rails`, `clips`, `mounted`) through its `part` switch. See `projects/bunk-accessories/checks.yaml`.
 

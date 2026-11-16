@@ -90,7 +90,7 @@ module rail_clip(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54,
                  hook_w = 40, wall = 3, leg_t = 2.5, lip = 1.0, lip_h = 2.5,
                  brace = 7.5, clear = 0.4, eps = 0.01,
                  catch = "none", low_h = 15.5, low_d = 20.18,
-                 catch_clear = 0.6, catch_reach = 1.5, catch_t = 2.5) {
+                 catch_clear = 0.6, catch_reach = 0.5, catch_t = 2.5) {
   top_z = clip_top(rail_h, wall);
   foot_z = clip_foot(rail_gap, brace);
   near_y = clear / 2;
@@ -99,6 +99,9 @@ module rail_clip(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54,
   // under that rail's bottom edge, so a bump from below can't lift the
   // clip off. Its top face is flat (it holds), its underside is a 45 deg
   // ramp so the plate flexes out and over both rails as the clip goes on.
+  // The clip prints saddle-down, so that flat face is a ledge over air:
+  // keep plate gap + catch_reach at the 1.0 mm the top snap lip already
+  // prints cleanly at (2.0 mm curled and spaghetti'd twice, 2026-11-15).
   low_face = -rail_d / 2 + low_d / 2;            // next rail's near face (centered under the top rail, as rail_ghost)
   catch_z = -(rail_gap + low_h) - catch_clear;   // underside of the next rail, plus play
   tip_y = low_face - catch_reach;

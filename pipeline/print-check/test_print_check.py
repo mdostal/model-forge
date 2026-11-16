@@ -75,3 +75,36 @@ def test_flat_floor_seats_the_cup(tmp_path):
     assert code == 0, rows
     r = rows[0]
     assert "sits flat" in r["msg"] and abs(r["data"]["rest_z"] - 2) < 0.1
+
+
+LEDGE_SCAD = textwrap.dedent("""
+    reach = 2;   // how far the shelf sticks out past the post
+    held = 0;     // 1: a second post holds the shelf's far end, so it's a bridge
+    cube([10, 4, 30]);
+    translate([0, -reach, 30]) cube([10, 4 + reach, 3]);
+    if (held > 0) translate([0, -reach - 4, 0]) cube([10, 4, 33]);
+""")
+
+
+def ledge(tmp_path, define):
+    (tmp_path / "l.scad").write_text(LEDGE_SCAD)
+    (tmp_path / "checks.yaml").write_text(json.dumps({"printability": [{"name": "shelf", "part": {"scad": "l.scad", "define": define}}]}))
+    out = tmp_path / "r.json"
+    code = print_check.main([str(tmp_path / "checks.yaml"), "--json", str(out)])
+    return code, json.loads(out.read_text())
+
+
+def test_a_long_ledge_over_air_is_called_out(tmp_path):
+    # the 2026-11-15 hook clip: a 2 mm flat ledge printed over air spaghetti'd twice
+    code, rows = ledge(tmp_path, {"reach": 2})
+    assert any(r["level"] == "WARN" and "ledge sticks out 2.0 mm" in r["msg"] for r in rows), rows
+
+
+def test_a_short_ledge_passes(tmp_path):
+    code, rows = ledge(tmp_path, {"reach": 1})
+    assert code == 0 and rows[0]["level"] == "PASS", rows
+
+
+def test_a_shelf_held_at_both_ends_is_a_bridge_not_a_ledge(tmp_path):
+    code, rows = ledge(tmp_path, {"reach": 6, "held": 1})
+    assert code == 0 and "bridges" in rows[0]["msg"], rows
