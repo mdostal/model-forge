@@ -3,8 +3,10 @@
 // rail, so tissues pull from its top. A hole in the floor lets you push
 // the box up to swap it.
 //
-// Box defaults are a PLACEHOLDER for a Costco Kleenex flat box; measure
-// yours (length, width, height) and change the Box values.
+// Box defaults are the Costco Kleenex Trusted Care flat box (230 ct,
+// Costco item 723675). Kleenex lists the 200-230 ct flat box at
+// 8.875 x 4.75 x 4.625 in; Target's listing says 9.00 long. The larger
+// of each is used here. Measure yours and change the Box values if needed.
 //
 // Print upright as modeled, no supports: the floor sits on the bed and
 // the windows have 45 deg pointed tops.
@@ -12,9 +14,9 @@
 use <rail-clip.scad>
 
 /* [Box, measure yours] */
-box_l = 240;      // along the rail (placeholder)
-box_w = 125;      // away from the rail (placeholder)
-box_h = 95;       // placeholder
+box_l = 228.6;    // 9.00 in, along the rail
+box_w = 120.7;    // 4.75 in, away from the rail
+box_h = 117.5;    // 4.625 in
 box_clear = 3;    // added to length and width
 hold = 0.6;       // fraction of the box height the tray walls cover
 

@@ -54,3 +54,17 @@ print_material: PLA           # PLA (default, gets thickened) | PETG (left alone
 No `measurements.yaml` exists yet for `projects/furniture-brackets/` — its
 `NOTES.md` measurement table is still blank. That's Milestone 0 (calipers on
 the real part), still open.
+
+## Before printing: print-check, slice-check, preflight
+
+Three Python tools catch mistakes before anything reaches the printer. Each tool's README explains its checks.
+
+| Tool | What it checks |
+|---|---|
+| `print-check/` | The model: does it stay on what it hangs from, does a cup seat, does it print without bad overhangs (`checks.yaml` per project). |
+| `slice-check/` | The sliced plate: every part on the bed, the right plate and bed temperature, on the plate and clear of the keep-out, not stale. |
+| `preflight/` | Runs both in one command and ends in `PREFLIGHT PASS` or `PREFLIGHT FAIL`. |
+
+```
+python3 pipeline/preflight/preflight.py --checks projects/<name>/checks.yaml plate.gcode.3mf --sources part.stl
+```

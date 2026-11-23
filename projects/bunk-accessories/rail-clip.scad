@@ -89,40 +89,85 @@ function clip_mount_y(clear = 0.4, wall = 3) = clear / 2 + wall;
 module rail_clip(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54,
                  hook_w = 40, wall = 3, leg_t = 2.5, lip = 1.0, lip_h = 2.5,
                  brace = 7.5, clear = 0.4, eps = 0.01,
-                 catch = "none", low_h = 15.5, low_d = 20.18,
-                 catch_clear = 0.6, catch_reach = 0.5, catch_t = 2.5) {
+                 catch = "none", low_h = 15.42, low_d = 15.42, low_set = 2.47, pad_clear = 0.3,
+                 catch_clear = 0.6, catch_reach = 1.5, catch_t = 2.5,
+                 nub_h = 2, nub_t = 2.5, wrap = false, min_tail = 34) {
+  // The clip hangs from one rail (rail_d x rail_h) and catches the next one
+  // down (low_d x low_h, rail_gap below, its near face low_set behind this
+  // rail's; negative low_set = in front of it). wrap = true: a clip for a
+  // single bar; the J catches under the same bar it hangs from, and a short
+  // far lip replaces the far leg so it rocks on.
+  g  = wrap ? -rail_h : rail_gap;
+  lh = wrap ? rail_h : low_h;
+  ld = wrap ? rail_d : low_d;
+  ls = wrap ? 0 : low_set;
   top_z = clip_top(rail_h, wall);
-  foot_z = clip_foot(rail_gap, brace);
+  foot_z = clip_foot(g, brace);
   near_y = clear / 2;
   far_y = -(rail_d + clear / 2);
-  // catch = "hook": the plate runs on past the next rail and a lip snaps
-  // under that rail's bottom edge, so a bump from below can't lift the
-  // clip off. Its top face is flat (it holds), its underside is a 45 deg
-  // ramp so the plate flexes out and over both rails as the clip goes on.
-  // The clip prints saddle-down, so that flat face is a ledge over air:
-  // keep plate gap + catch_reach at the 1.0 mm the top snap lip already
-  // prints cleanly at (2.0 mm curled and spaghetti'd twice, 2026-11-15).
-  low_face = -rail_d / 2 + low_d / 2;            // next rail's near face (centered under the top rail, as rail_ghost)
-  catch_z = -(rail_gap + low_h) - catch_clear;   // underside of the next rail, plus play
+  low_face = -ls;                                // next rail's near face
+  // the plate stands off whichever face sticks out further
+  plate_y = wrap ? near_y : max(near_y, low_face + pad_clear);
+  // catch = "hook": a lip snaps under the next rail's near edge; flat top
+  // face holds, 45 deg ramp underneath so the plate flexes over the rails.
+  // Printed saddle-down the flat face is a ledge over air of about
+  // catch_reach (1.5 = owner's pick, 2026-11-16).
+  catch_z = -(g + lh) - catch_clear;             // underside of the next rail, plus play
   tip_y = low_face - catch_reach;
-  ramp = near_y - tip_y;
-  plate_z = catch == "hook" ? catch_z - catch_t - ramp : foot_z;
-  assert(catch == "none" || catch == "hook", str("rail_clip: unknown catch ", catch));
-  // plate down the near face, resting on the next rail's face
-  translate([-hook_w / 2, near_y, plate_z]) cube([hook_w, wall, top_z - plate_z]);
+  ramp = plate_y - tip_y;
+  // catch = "j" (owner's pick, 2026-11-18): a shelf runs right under the
+  // next rail, across its full depth, and a nub_h nub turns up behind its
+  // far face. It goes on by hooking under first and rocking up over the
+  // hanging rail. Printed saddle-down, shelf and nub need supports.
+  j_far = low_face - ld - catch_clear;           // shelf's far end, behind the next rail
+  catch_bot = catch == "hook" ? catch_z - catch_t - ramp
+            : catch == "j" ? catch_z - catch_t - 4 : foot_z;
+  // long enough for an accessory's 30 mm of socket, whatever the catch
+  plate_z = min(catch_bot, top_z - min_tail);
+  assert(catch == "none" || catch == "hook" || catch == "j", str("rail_clip: unknown catch ", catch));
+  assert(!wrap || catch == "j", "rail_clip: a single-bar clip (wrap) needs catch = \"j\"");
+  // spacer between the plate and this rail's face, when the next rail sticks out further
+  if (plate_y > near_y + 0.2) translate([-hook_w / 2, near_y - eps, 0]) cube([hook_w, plate_y - near_y + 2 * eps, rail_h + eps]);
+  // pad on the plate's inside that rests on the next rail's face (pad_clear
+  // play) when that rail sits behind this one. 45 deg ends.
+  pad = plate_y - (low_face + pad_clear);
+  if (!wrap && pad > 0.2) translate([hook_w / 2, 0, 0]) rotate([0, -90, 0]) linear_extrude(hook_w)
+    // with a catch the pad runs on down into it (no notch for a ledge to hang off)
+    let(pb = catch == "none" ? max(-(g + lh), plate_z + pad) : catch_z - eps)
+    polygon([[-g + pad, plate_y + eps], [-g, plate_y - pad], [pb, plate_y - pad],
+             catch == "none" ? [pb - pad, plate_y + eps] : [pb, plate_y + eps]]);
+  translate([-hook_w / 2, plate_y, plate_z]) cube([hook_w, wall, top_z - plate_z]);
   if (catch == "hook") translate([hook_w / 2, 0, 0]) rotate([0, -90, 0]) linear_extrude(hook_w)
-    polygon([[catch_z, near_y + eps], [catch_z, tip_y], [catch_z - catch_t, tip_y],
-             [catch_z - catch_t - ramp, near_y + eps]]);
+    polygon([[catch_z, plate_y + eps], [catch_z, tip_y], [catch_z - catch_t, tip_y],
+             [catch_z - catch_t - ramp, plate_y + eps]]);
+  if (catch == "j") translate([hook_w / 2, 0, 0]) rotate([0, -90, 0]) linear_extrude(hook_w) union() {
+    // shelf under the next rail, from the plate to behind its far face
+    polygon([[catch_z, plate_y + eps], [catch_z, j_far - nub_t],
+             [catch_z - catch_t, j_far - nub_t], [catch_z - catch_t, plate_y + eps]]);
+    // nub up behind the far face, 45 deg lead-in on its outer top edge
+    polygon([[catch_z - eps, j_far], [catch_z + nub_h, j_far],
+             [catch_z + nub_h, j_far - nub_t + min(nub_h, nub_t) / 2], [catch_z + nub_h - min(nub_h, nub_t) / 2, j_far - nub_t],
+             [catch_z - eps, j_far - nub_t]]);
+    // 45 deg gusset under the shelf where it meets the plate
+    polygon([[catch_z - catch_t + eps, plate_y + eps], [catch_z - catch_t + eps, plate_y - 4],
+             [catch_z - catch_t - 4, plate_y + eps]]);
+  }
   // saddle across the rail top
   translate([-hook_w / 2, far_y - leg_t, rail_h])
-    cube([hook_w, rail_d + clear + leg_t + wall, wall]);
-  // far leg down the rail's far face
-  translate([-hook_w / 2, far_y - leg_t, -lip_h]) cube([hook_w, leg_t, rail_h + lip_h + eps]);
-  // snap lip under the rail's far edge, lead-in chamfer on its lower face
-  translate([hook_w / 2, far_y, -lip_h]) rotate([0, -90, 0]) linear_extrude(hook_w)
-    polygon([[0, 0], [lip_h, 0], [lip_h, lip], [lip_h - lip, lip]]);
-  // dovetail tail on the plate's outer face, full plate height
-  translate([0, clip_mount_y(clear, wall) - eps, 0]) dt_tail(foot_z, top_z);
+    cube([hook_w, plate_y - far_y + wall + leg_t, wall]);
+  if (wrap) {
+    // short far lip over the bar's far top edge (the J holds the bottom)
+    translate([-hook_w / 2, far_y - leg_t, rail_h - nub_h - 1]) cube([hook_w, leg_t, nub_h + 1 + eps]);
+  } else {
+    // far leg down the rail's far face
+    translate([-hook_w / 2, far_y - leg_t, -lip_h]) cube([hook_w, leg_t, rail_h + lip_h + eps]);
+    // snap lip under the rail's far edge, lead-in chamfer on its lower face
+    translate([hook_w / 2, far_y, -lip_h]) rotate([0, -90, 0]) linear_extrude(hook_w)
+      polygon([[0, 0], [lip_h, 0], [lip_h, lip], [lip_h - lip, lip]]);
+  }
+  // dovetail tail on the plate's outer face, to the plate's bottom so a
+  // catch has no thin neck (accessories just leave it showing below)
+  translate([0, plate_y + wall - eps, 0]) dt_tail(plate_z, top_z);
 }
 
 // place an accessory (in accessory axes) on a default clip at x
@@ -132,10 +177,11 @@ module on_clip(x = 0, clear = 0.4, wall = 3, rail_h = 20.38) {
 }
 
 // the bed's rails, for renders only (accessory side is +Y)
-module rail_ghost(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54, low_d = 20.18, low_h = 15.5) {
+// next rail: 15.42 square, its near face 2.47 behind the top rail's (owner's calipers, 2026-11-16)
+module rail_ghost(rail_d = 20.74, rail_h = 20.38, rail_gap = 80.54, low_d = 15.42, low_h = 15.42, low_set = 2.47) {
   color("pink", 0.5) {
     translate([-200, -rail_d, 0]) cube([400, rail_d, rail_h]);
-    translate([-200, -rail_d / 2 - low_d / 2, -rail_gap - low_h]) cube([400, low_d, low_h]);
+    translate([-200, -low_set - low_d, -rail_gap - low_h]) cube([400, low_d, low_h]);
   }
 }
 

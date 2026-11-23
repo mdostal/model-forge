@@ -86,7 +86,7 @@ def export(spec, base, cache):
     if not os.path.exists(stl):
         args = [openscad_bin(), "-o", stl]
         for k, v in defines.items():
-            args += ["-D", f"{k}={json.dumps(v) if isinstance(v, str) else v}"]
+            args += ["-D", f"{k}={json.dumps(v)}"]   # JSON is OpenSCAD syntax for numbers, strings, lists and true/false
         r = subprocess.run(args + [scad], capture_output=True, text=True)
         open(log, "w").write(r.stdout + r.stderr)
         if r.returncode != 0 or not os.path.exists(stl):
