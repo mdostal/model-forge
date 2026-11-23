@@ -1,0 +1,22 @@
+license: CC BY-NC-SA 4.0
+license_file: LICENSE-listing.md
+license_note: Print it for yourself, your family, your classroom or as a gift, and remix it under the same license; don't sell prints or files without asking.
+credit: Designed by mdostal.
+print_settings: |
+  - PLA, 0.4 mm nozzle, 0.20 mm layers, 2 walls, 15% infill, Textured PEI plate (bed 55 C). No supports.
+  - The Customizer's part list picks each printed part; the STLs here are the default size with no name.
+  - Names use Liberation Sans Bold (SIL OFL). Leave the name empty for none.
+models:
+  - name: treasure-chest
+    scad: treasure-chest.scad
+    part: print_base
+    title: Treasure Chest for the School Supply Caddy - customizable
+    stub_uses: {"../school-caddy/school-caddy.scad": "module organizer() {}\nmodule supplies() {}"}
+    extra_parts: [{part: print_lid, file: lid}, {part: print_straps, file: straps}, {part: print_plates, file: plates}]
+    description: |
+      A lidded treasure chest that closes around the School Supply Caddy (separate model): the caddy drops in as an
+      insert, and its end lips poke out through slots in the chest's ends as handles that lift the insert straight out.
+      Planks engraved in, straps that sit in shallow channels, a name plate (optional name) and a lock plate. Print the
+      colors as separate parts and glue them in (base and lid brown, straps black, plates yellow), or use the multicolor
+      parts for an AMS. The caddy_* sizes match your caddy and everything else sizes itself. Hinge pins are plain 1.75 mm
+      filament. Prints: base (upright), lid (upside down), straps twice (on edge), plates (flat).

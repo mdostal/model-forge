@@ -1,0 +1,19 @@
+license: CC BY-NC-SA 4.0
+license_file: LICENSE-listing.md
+license_note: Print it for yourself, your family, your classroom or as a gift, and remix it under the same license; don't sell prints or files without asking.
+credit: Designed by mdostal.
+print_settings: |
+  - PLA, 0.4 mm nozzle, 0.20 mm layers, 2 walls, 15% infill, Textured PEI plate (bed 55 C). No supports.
+  - The Customizer's part list picks each printed part; the STLs here are the default size with no name.
+  - Names use Liberation Sans Bold (SIL OFL). Leave the name empty for none.
+models:
+  - name: school-supply-caddy
+    scad: school-caddy.scad
+    part: organizer
+    title: School Supply Caddy - customizable, optional name
+    description: |
+      A one-piece stepped caddy that keeps school supplies upright and lifts out with two hands by its end lips.
+      Deep back section for a box of markers, a 24-count colored pencil box, a 24-count crayon box, 8 pencils and
+      scissors (blades down); a middle section for a glue bottle, 8 loose markers and 2 glue sticks; a shallow front
+      tray for an eraser and small things. Every size is in the Customizer, plus an optional name engraved on the back.
+      It also drops into the Treasure Chest as its insert.
