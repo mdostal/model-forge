@@ -26,6 +26,11 @@ retention:
     moving: {scad: clip.scad, part: onrail, define: {catch: j}}
     loads: [-z, +z, +y, -y]
     allow_free: [+x, -x]
+  - name: j clip with the doubled 4 mm nub
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: j, nub_h: 4}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
   - name: middle-bar clip on one middle bar
     fixed: [{scad: clip.scad, part: rails, define: {mount: middle}}]
     moving: {scad: clip.scad, part: onrail, define: {mount: middle}}
@@ -142,6 +147,7 @@ printability:
   - {name: cup holder, part: {scad: cup-holder.scad, part: holder}}
   - {name: cubby, part: {scad: cubby.scad, part: cubby}}
   - {name: tissue tray, part: {scad: tissue-holder.scad, part: holder}}
+  - {name: j clip doubled nub (supported), part: {scad: clip.scad, define: {catch: j, nub_h: 4}}, max_ledge_mm: 45}
   - {name: book holder, part: {scad: book-holder.scad, part: holder}}
   - {name: small storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: small}}}
   - {name: large storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: large}}}

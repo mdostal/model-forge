@@ -32,6 +32,13 @@ end_shapes = ["heart"];  // on each end wall, rail side to front
 shape_size = 26;    // [12:1:40] each shape's height
 shape_frac = 0.5;   // [0.3:0.05:0.7] shape center height, as a fraction of the wall below the next row
 
+/* [Stripes] */
+stripes = 4;      // [0:1:10] bands of the second color
+stripe_h = 8;     // each band's height
+base_band = 10;   // first-color band at the bottom
+layer_h = 0.2;    // bands are cut at multiples of this, so an AMS swaps on clean layers
+stripe_part = 0;  // [0, 1, 2] 0: the whole holder; 1 or 2: that color's bands only
+
 /* [Build] */
 wall = 2;
 floor_t = 2.4;
@@ -135,7 +142,25 @@ module body() {
   }
 }
 
-module holder() { with_mounts(-bot, dt_clear, xs) body(); }
+module holder_whole() { with_mounts(-bot, dt_clear, xs) body(); }
+
+// stripe bands, bottom up: base_band of color 1, then stripe_h of color 2 and of color 1 in turn, stripes times; the rest color 1
+function snap(z) = round(z / layer_h) * layer_h;
+function band_z(i) = snap(bot + base_band + i * stripe_h);
+module stripe_slab(c) {
+  big = 1000;
+  for (i = [0 : 2 * stripes - 1]) if ((i % 2 == 0 ? 2 : 1) == c)
+    translate([-big / 2, -big / 2, band_z(i)]) cube([big, big, band_z(i + 1) - band_z(i)]);
+  if (c == 1) {
+    translate([-big / 2, -big / 2, bot - big]) cube([big, big, band_z(0) - bot + big]);
+    translate([-big / 2, -big / 2, band_z(2 * stripes)]) cube([big, big, big]);
+  }
+}
+assert(stripe_part == 0 || band_z(2 * stripes) <= bot + oh - 2, "book-holder: the stripes run past the top; fewer or thinner stripes");
+module holder() {
+  if (stripe_part == 0 || stripes == 0) { if (stripe_part != 2) holder_whole(); }
+  else intersection() { holder_whole(); stripe_slab(stripe_part); }
+}
 
 if (part == "assembly") bunk_assembly(xs) holder();
 else if (part == "holder") holder();
