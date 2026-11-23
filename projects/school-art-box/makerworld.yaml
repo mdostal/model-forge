@@ -1,0 +1,21 @@
+license: CC BY-NC-SA 4.0
+license_file: LICENSE-listing.md
+license_note: Print it for yourself, your family, your classroom or as a gift, and remix it under the same license; don't sell prints or files without asking.
+credit: Designed by mdostal.
+print_settings: |
+  - PLA, 0.4 mm nozzle, 0.20 mm layers, 2 walls, 15% infill, Textured PEI plate (bed 55 C). No supports.
+  - The Customizer's part list picks each printed part; the STLs here are the default size with no name.
+  - Names use Liberation Sans Bold (SIL OFL). Leave the name empty for none.
+models:
+  - name: school-art-box
+    scad: art-box.scad
+    part: print_base
+    title: School Art Box with insert tray - customizable
+    extra_parts: [{part: print_lid, file: lid}, {part: print_insert, file: insert-tray}]
+    description: |
+      A lay-flat school supply box with a hinged lid and a click latch, so supplies stay shut in a classroom cubby,
+      and a lift-out insert tray that gives every supply its own section (markers, pencils, glue bottle and scissors,
+      crayon and colored pencil boxes, eraser, glue sticks), each with a picture on its floor. The lid takes an optional
+      engraved name and picture icons. Every size is in the Customizer: inside size, walls, lid fit, hinge, latch, each
+      insert row and section, and the art's scale. Hinge pins are plain 1.75 mm filament. Three prints: base, lid and
+      insert tray (pick them in the Customizer's part list).

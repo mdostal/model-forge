@@ -34,17 +34,21 @@ def top_level_geometry_free(src):
     return "\n".join(out)
 
 
-def flatten(path, seen=None):
+def flatten(path, seen=None, stubs=None):
+    """stubs: {relative path: replacement text} for a `use`d file that only previews need (its modules become no-ops),
+    when inlining it would clash with the model's own variables."""
     seen = set() if seen is None else seen
+    stubs = stubs or {}
     path = os.path.abspath(path)
     src = open(path).read()
     def repl(m):
         kind, rel = m.group(1), m.group(2)
         dep = os.path.join(os.path.dirname(path), rel)
+        if rel in stubs: return f"// ---- {rel} replaced for this package: only previews used it ----\n{stubs[rel]}"
         if not os.path.exists(dep): return m.group(0)   # a library MakerWorld provides (BOSL2 and so on): leave it
         if dep in seen: return f"// ({rel} already inlined above)"
         seen.add(dep)
-        body = flatten(dep, seen)
+        body = flatten(dep, seen, stubs)
         if kind == "use": body = top_level_geometry_free(body)
         return f"// ---- inlined from {rel} ({kind}) ----\n{body}\n// ---- end of {rel} ----"
     return INC.sub(repl, src)
@@ -69,7 +73,7 @@ def main(argv=None):
     for m in cfg["models"]:
         name, src = m["name"], os.path.join(base, m["scad"])
         d = os.path.join(out_root, name); shutil.rmtree(d, ignore_errors=True); os.makedirs(d)
-        flat = flatten(src)
+        flat = flatten(src, stubs=m.get("stub_uses"))
         if m.get("part"): flat = re.sub(r'^part\s*=\s*"[^"]*"', f'part = "{m["part"]}"', flat, count=1, flags=re.M)
         header = f"// {m['title']}. {cfg.get('credit', '')}\n// License: {cfg.get('license', '')}. Self-contained for MakerWorld's Parametric Model Maker.\n"
         flat_path = os.path.join(d, f"{name}.scad"); open(flat_path, "w").write(header + flat)
@@ -80,6 +84,8 @@ def main(argv=None):
         subprocess.run([OPENSCAD, "-o", os.path.join(d, "cover.png"), "--imgsize=1200,900", "--viewall", "--autocenter",
                         "--colorscheme=Tomorrow"] + [x for k, v in m.get("cover_defines", {}).items() for x in ("-D", f"{k}={v}")] + [flat_path],
                        capture_output=True)
+        for extra in m.get("extra_parts", []):   # every other printed part, as its own STL from the same flattened file
+            export(flat_path, os.path.join(d, f"{name}-{extra['file']}.stl"), {"part": f'"{extra["part"]}"'})
         if os.path.exists(lic): shutil.copy(lic, os.path.join(d, "LICENSE.md"))
         open(os.path.join(d, "listing.md"), "w").write(
             f"# {m['title']}\n\n{m['description'].strip()}\n\n## Print settings\n\n{cfg.get('print_settings', '').strip()}\n\n"
