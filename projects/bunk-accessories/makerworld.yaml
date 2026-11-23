@@ -1,0 +1,58 @@
+# Upload packages for MakerWorld's Parametric Model Maker (and Printables / Thingiverse):
+#   python3 pipeline/makerworld-pack/pack.py projects/bunk-accessories/makerworld.yaml
+# Never the Exclusive program: these stay open source (CC BY-NC-SA) and listed elsewhere too.
+license: CC BY-NC-SA 4.0
+license_file: LICENSE-listing.md
+license_note: Print it for yourself, your family or as a gift, and remix it under the same license; don't sell prints or files without asking.
+credit: Designed by mdostal.
+print_settings: |
+  - PLA, 0.4 mm nozzle, 0.20 mm layers, 2 walls, 15% infill, Textured PEI plate (bed 55 C).
+  - Accessories print upright as modeled, no supports.
+  - Rail clips print flipped (saddle on the bed, as exported) with tree supports under the J hook; snap them off.
+  - Measure your bed with calipers: top rail front to back and height, the gap to the next bar, a middle bar's size,
+    and how far the middle bar sits behind the top rail's face. Every number is in the Customizer.
+models:
+  - name: bunk-rail-clip
+    scad: clip.scad
+    part: clip
+    title: Bunk Bed Rail Clip (customizable to your bed)
+    description: |
+      A clip that hangs on a bunk or loft bed's rails and carries a dovetail every accessory in this set slides onto:
+      cup holder, tissue box holder, book holder and storage trays. Three mounts: on the top rail (the J hooks under
+      the bar below), round one middle bar, or from a middle bar to the bottom frame. The J goes on by hooking under
+      first and rocking in; a bump from below can't lift it off. Enter your bed's measurements in the Customizer.
+      The defaults are our loft bed. Print one clip per socket on the accessory (most use 1 or 2).
+  - name: bunk-cup-holder
+    scad: cup-holder.scad
+    part: holder
+    title: Bunk Bed Cup Holder (slides onto the rail clip)
+    description: |
+      A cup holder for the top bunk. Set the ring to your cup's widest point plus about 4 mm, and the depth to about
+      60% of its height. Flat floor for glasses, cone floor for sippy cups and narrow-bottomed cups, and optional
+      handle slots for a mug or little fingers. Lowers onto a Bunk Bed Rail Clip from above; a full glass pushes it on
+      harder. Needs the rail clip (separate model).
+  - name: bunk-tissue-holder
+    scad: tissue-holder.scad
+    part: holder
+    title: Bunk Bed Tissue Box Holder (slides onto 2 rail clips)
+    description: |
+      Holds a flat tissue box lying down beside the bed. The defaults fit the Kleenex Trusted Care flat box
+      (8.875 x 4.75 x 4.625 in); measure yours and change the box size. Pointed windows print with no supports.
+      Needs 2 Bunk Bed Rail Clips (separate model), spaced to miss your bed's posts.
+  - name: bunk-book-holder
+    scad: book-holder.scad
+    part: holder
+    title: Bunk Bed Book Holder, stepped or flat (slides onto 2 rail clips)
+    description: |
+      Bedtime books within reach: rows of picture books, front to back. Stepped, each row stands higher than the one
+      in front so every row's covers show; flat, one thick floor and taller walls. Pick the cut-out shapes (heart,
+      diamond, circle, star) along the front and ends, the rows, their depths and the wall heights. Stripes cut at
+      whole layers for an AMS. Needs 2 Bunk Bed Rail Clips (separate model).
+  - name: bunk-storage-tray
+    scad: storage-tray.scad
+    part: tray
+    title: Bunk Bed Storage Tray with custom compartments (slides onto rail clips)
+    description: |
+      A tray for remotes, glasses and small toys. Small (3 spots, 1 clip), large (6 spots, 2 clips) or your own column
+      widths and row depths; an even grid, a big middle compartment, or draw your own divider lines wall to wall.
+      Finger dips in the front. Needs 1 or 2 Bunk Bed Rail Clips (separate model).
