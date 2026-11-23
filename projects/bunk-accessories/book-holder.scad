@@ -1,7 +1,11 @@
-// Bunk book holder: three stepped rows of books, front to back, that hang on
-// rail clips (clip.scad), lowered on from above. Each row's floor is a step
-// higher than the one in front, so every row of books shows over the one
-// before it: pick one out at night, put it back when done.
+// Bunk book holder: rows of books, front to back, that hang on rail clips
+// (clip.scad), lowered on from above.
+//   layout = "stepped": each row's floor is a step higher than the one in front,
+//            so every row's covers show over the row before it: pick one out at
+//            night, put it back when done. Every row still has a lip in front of
+//            its books at least `lip` tall.
+//   layout = "flat":    every row on one thicker floor; the walls cover more of
+//            the books, the back rows' covers sit behind the front books.
 //
 // Picture books are mostly 7-10 in tall (portrait 7x10, landscape 10x8, square
 // 7.5-8.5) and board books about 6x6 in (Blurb and Reedsy trim-size guides).
@@ -17,12 +21,16 @@
 use <rail-clip.scad>
 
 /* [Size] */
+layout = "stepped"; // [stepped, flat]
 width = 230;        // inside, along the rail (the tissue holder's is 232)
 rows = 3;           // [1:1:4] rows of books, front to back
-row_d = 30;         // inside depth of each row: 2-3 picture books, or one thick board book
-step = 25;          // how much higher each row's floor is than the row in front
-front_h = 60;       // front row's wall height above its floor
-back_extra = 20;    // the back wall rises this much above the row in front's top
+row_d = 30;         // front row's inside depth: 2-3 picture books
+back_d = 35;        // every row behind it: 3 hardcovers or a thick board book
+step = 20;          // stepped: how much higher each row's floor is than the row in front
+front_h = 60;       // the front wall, above the front row's floor
+lip = 55;           // stepped: the divider in front of each back row, above that row's floor
+back_h = 80;        // the back wall, above the back row's floor
+flat_floor_t = 3.2; // flat: the thicker one-piece floor
 
 /* [Shapes] */
 front_shapes = ["heart", "diamond", "heart", "circle", "heart"]; // left to right, as seen from the room; "" leaves a gap.
@@ -41,7 +49,7 @@ stripe_part = 0;  // [0, 1, 2] 0: the whole holder; 1 or 2: that color's bands o
 
 /* [Build] */
 wall = 2;
-floor_t = 2.4;
+floor_t0 = 2.4;     // stepped: floor thickness
 divider = 2;
 corner_r = 3;
 clips = 2;
@@ -56,23 +64,33 @@ part = "holder"; // [holder, assembly, rails, clips, mounted]
 $fn = 40;
 eps = 0.01;
 
-id = rows * row_d + (rows - 1) * divider;   // inside depth
+stepped = layout == "stepped";
+floor_t = stepped ? floor_t0 : flat_floor_t;
+st = stepped ? step : 0;
+// rows numbered from the front (room side, k = 0) to the back (rail side, k = rows - 1)
+function d(k) = k == 0 ? row_d : back_d;
+function depth_to(k) = k <= 0 ? 0 : d(k - 1) + divider + depth_to(k - 1);   // inside depth in front of row k
+id = depth_to(rows) - divider;   // inside depth
 ow = width + 2 * wall;
 od = id + 2 * wall;
 y0 = dt_block_d(dt_clear) - eps;
-// rows numbered from the front (room side, k = 0) to the back (rail side, k = rows - 1)
-function floor_z(k) = floor_t + k * step;   // floor top of row k, from the holder bottom
-function wall_top(k) = floor_z(k) + front_h;                              // its wall/divider top
-oh = wall_top(rows - 1) + back_extra;    // overall height
+function floor_z(k) = floor_t + k * st;   // floor top of row k, from the holder bottom
+// the wall in front of row k: the front wall, or the divider; flat dividers stand as tall as the front wall
+function front_top(k) = floor_z(k) + (k == 0 || !stepped ? front_h : lip);
+oh = floor_z(rows - 1) + back_h;   // overall height: the back wall
+// end walls step up with the dividers: beside row k they stand as tall as the divider behind it
+function end_top(k) = k >= rows - 1 ? oh : front_top(k + 1);
 bot = dt_roof() - oh;                    // back rim flush with the socket roof
 xs = clips >= 2 ? [-clip_pitch / 2, clip_pitch / 2] : [0];
-// y of row k's near (rail-side) and far edges, inside; row k = 0 is at the front (large y)
-function row_y1(k) = y0 + wall + id - k * (row_d + divider);   // front edge
-function row_y0(k) = row_y1(k) - row_d;                         // rail-side edge
+// y of row k's front (room side) and rail-side edges, inside; row k = 0 is at the front (large y)
+function row_y1(k) = y0 + wall + id - depth_to(k);
+function row_y0(k) = row_y1(k) - d(k);
 
+assert(layout == "stepped" || layout == "flat", str("book-holder: unknown layout ", layout));
 assert(rows >= 1 && rows <= 4, "1 to 4 rows");
+assert(back_h >= front_h, "the back wall must be at least as tall as the front wall");
 assert(front_h >= shape_size + 12, "front wall too short for the shapes");
-echo(str("book holder: ", rows, " rows of ", row_d, " mm, inside ", width, " x ", id,
+echo(str("book holder: ", layout, ", ", rows, " rows (", row_d, " front, ", back_d, " behind), inside ", width, " x ", id,
          ", outside ", ow, " x ", od, " x ", oh, " mm, clips ", clips));
 
 module rbox(w, d, h, r) {
@@ -113,15 +131,19 @@ module body() {
         translate([-ow / 2, y0, bot]) rbox(ow, od, oh, corner_r);
         // each row's well, from its floor up
         for (k = [0 : rows - 1])
-          translate([-width / 2, row_y0(k), bot + floor_z(k)]) cube([width, row_d, oh]);
-        // each wall is cut down to its row's top: the space above row k's top, in front of row k+1
-        for (k = [0 : rows - 2])
-          translate([-ow / 2 - 1, row_y0(k) - divider - eps, bot + wall_top(k)])
-            cube([ow + 2, (row_y1(0) + wall + 1) - (row_y0(k) - divider), oh]);
+          translate([-width / 2, row_y0(k), bot + floor_z(k)]) cube([width, d(k), oh]);
+        // cut each front-to-back section down to its height, across the whole width: the wall (front wall or
+        // divider) in front of row k to front_top(k), and the end walls beside row k to end_top(k)
+        for (k = [0 : rows - 1]) {
+          ya = row_y1(k); yb = k == 0 ? y0 + od + 1 : row_y1(k) + divider;
+          translate([-ow / 2 - 1, ya - eps, bot + front_top(k)]) cube([ow + 2, yb - ya + 2 * eps, oh]);
+          if (k < rows - 1) translate([-ow / 2 - 1, row_y0(k) - eps, bot + end_top(k)]) cube([ow + 2, d(k) + 2 * eps, oh]);
+        }
         // hollow under the raised floors, open to the bed: steps print as thin walls with bridged tops
-        for (k = [1 : rows - 1])
-          translate([-width / 2, row_y0(k) + wall, bot - 1])
-            cube([width, row_d - 2 * wall, floor_z(k) - floor_t + 1]);
+        if (stepped) for (k = [1 : rows - 1])
+          let (hw = min(d(k) - 2 * wall, 26))   // bridged top no wider than 26 mm
+          translate([-width / 2, row_y0(k) + (d(k) - hw) / 2, bot - 1])
+            cube([width, hw, floor_z(k) - floor_t + 1]);
       }
     }
     // front wall shapes, centered in the front row's wall
@@ -134,8 +156,9 @@ module body() {
     m = len(end_shapes);
     if (m > 0) for (s = [-1, 1], j = [0 : m - 1]) if (end_shapes[j] != "") {
       yc = y0 + wall + (j + 0.5) * id / m;
-      k = max(0, min(rows - 1, floor((row_y1(0) - yc) / (row_d + divider))));   // the row this spot is beside
-      zc = bot + min(wall_top(k) * shape_frac, wall_top(k) - shape_size / 2 - 8);   // the end wall there is solid from the bottom up to wall_top(k)
+      k = len([for (r = [0 : rows - 1]) if (row_y0(r) > yc) r]);   // the row this spot is beside
+      h = min(end_top(min(k, rows - 1)), front_top(min(k, rows - 1)));   // the end wall is solid at least this high there
+      zc = bot + min(h * shape_frac, h - shape_size / 2 - 8);
       translate([s * (ow / 2 + 1), yc, zc]) rotate([0, 0, 90]) rotate([90, 0, 0])
         linear_extrude(wall + 2, center = true) shape2d(end_shapes[j], shape_size);
     }

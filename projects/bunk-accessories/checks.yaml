@@ -71,6 +71,11 @@ retention:
     moving: {scad: book-holder.scad, part: mounted}
     loads: [-z, +y, +x, -x]
     install: +z
+  - name: flat book holder on its clips
+    fixed: [{scad: book-holder.scad, part: clips, define: {layout: flat}}]
+    moving: {scad: book-holder.scad, part: mounted, define: {layout: flat}}
+    loads: [-z, +y, +x, -x]
+    install: +z
   - name: small storage tray on its clip
     fixed: [{scad: storage-tray.scad, part: clips, define: {size: small}}]
     moving: {scad: storage-tray.scad, part: mounted, define: {size: small}}
@@ -149,6 +154,7 @@ printability:
   - {name: tissue tray, part: {scad: tissue-holder.scad, part: holder}}
   - {name: j clip doubled nub (supported), part: {scad: clip.scad, define: {catch: j, nub_h: 4}}, max_ledge_mm: 45}
   - {name: book holder, part: {scad: book-holder.scad, part: holder}}
+  - {name: flat book holder, part: {scad: book-holder.scad, part: holder, define: {layout: flat}}}
   - {name: small storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: small}}}
   - {name: large storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: large}}}
   - {name: small storage tray feature layout, part: {scad: storage-tray.scad, part: tray, define: {size: small, style: feature}}}
