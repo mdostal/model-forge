@@ -1,0 +1,168 @@
+# print-check config for the bunk rail system. Run from the repo root:
+#   python3 pipeline/print-check/print_check.py projects/bunk-accessories/checks.yaml
+# Object sizes: Duralex Picardie top width and height are retailer figures
+# (250 ml 86 x 90, 310 ml 90 x 94); base widths and the sippy cup are
+# ASSUMPTIONS until measured.
+cache: output/check
+
+retention:
+  - name: clip on the top rail
+    fixed: [{scad: cup-holder.scad, part: rails}]
+    moving: {scad: cup-holder.scad, part: clips}
+    loads: [-z, +y, -y]
+    allow_free: [+x, -x]          # it can slide along the rail; nothing pushes it that way hard
+  - name: hook clip on the top two rails
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: hook}}
+    loads: [-z, +z, +y, -y]       # cup weight, a bump from below, pulls either way
+    allow_free: [+x, -x]
+  - name: 4 mm hook clip on the top two rails (test)
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: hook, catch_reach: 4}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
+  - name: j clip on the top two rails (test)
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: j}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
+  - name: j clip with the doubled 4 mm nub
+    fixed: [{scad: clip.scad, part: rails}]
+    moving: {scad: clip.scad, part: onrail, define: {catch: j, nub_h: 4}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
+  - name: middle-bar clip on one middle bar
+    fixed: [{scad: clip.scad, part: rails, define: {mount: middle}}]
+    moving: {scad: clip.scad, part: onrail, define: {mount: middle}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
+  - name: mid-bottom clip, middle bar to bottom frame
+    fixed: [{scad: clip.scad, part: rails, define: {mount: mid-bottom}}]
+    moving: {scad: clip.scad, part: onrail, define: {mount: mid-bottom}}
+    loads: [-z, +z, +y, -y]
+    allow_free: [+x, -x]
+  - name: cup holder on its clip
+    fixed: [{scad: cup-holder.scad, part: rails}, {scad: cup-holder.scad, part: clips}]
+    moving: {scad: cup-holder.scad, part: mounted}
+    loads: [-z, +y, +x, -x]       # cup dropped in, kid pulls it outward or sideways
+    install: +z
+  - name: small cup holder on its clip
+    fixed: [{scad: cup-holder.scad, part: rails}, {scad: cup-holder.scad, part: clips}]
+    moving: {scad: cup-holder.scad, part: mounted, define: {cup_id: 80, depth: 50}}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: large cup holder on its clip
+    fixed: [{scad: cup-holder.scad, part: rails}, {scad: cup-holder.scad, part: clips}]
+    moving: {scad: cup-holder.scad, part: mounted, define: {cup_id: 108, depth: 65}}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: cubby on its clip
+    fixed: [{scad: cubby.scad, part: clips}]
+    moving: {scad: cubby.scad, part: mounted}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: tissue tray on its clips
+    fixed: [{scad: tissue-holder.scad, part: clips}]
+    moving: {scad: tissue-holder.scad, part: mounted}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: book holder on its clips
+    fixed: [{scad: book-holder.scad, part: clips}]
+    moving: {scad: book-holder.scad, part: mounted}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: flat book holder on its clips
+    fixed: [{scad: book-holder.scad, part: clips, define: {layout: flat}}]
+    moving: {scad: book-holder.scad, part: mounted, define: {layout: flat}}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: small storage tray on its clip
+    fixed: [{scad: storage-tray.scad, part: clips, define: {size: small}}]
+    moving: {scad: storage-tray.scad, part: mounted, define: {size: small}}
+    loads: [-z, +y, +x, -x]
+    install: +z
+  - name: large storage tray on its clips
+    fixed: [{scad: storage-tray.scad, part: clips, define: {size: large}}]
+    moving: {scad: storage-tray.scad, part: mounted, define: {size: large}}
+    loads: [-z, +y, +x, -x]
+    install: +z
+
+seat:
+  - name: Duralex Picardie 310 ml in the cup holder
+    part: {scad: cup-holder.scad, part: holder}
+    at: echo:seat_center
+    object: {base_d: 65, top_d: 90, h: 94}
+    proud: [20, 60]
+  - name: Duralex Picardie 250 ml in the cup holder
+    part: {scad: cup-holder.scad, part: holder}
+    at: echo:seat_center
+    object: {base_d: 62, top_d: 86, h: 90}
+    proud: [20, 60]
+  - name: straight 75 mm sippy cup in the cup holder
+    part: {scad: cup-holder.scad, part: holder}
+    at: echo:seat_center
+    object: {base_d: 75, h: 150}
+    proud: [20, 120]
+  - name: widest straight cup that fits, 89 mm
+    part: {scad: cup-holder.scad, part: holder}
+    at: echo:seat_center
+    object: {base_d: 89, h: 100}
+    proud: [20, 60]
+
+  # shop sizes other than medium (medium is the file's defaults)
+  - name: small (80 ring) - kids tumbler 70 x 85
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 80, depth: 50}}
+    at: echo:seat_center
+    object: {base_d: 60, top_d: 70, h: 85}
+    proud: [20, 120]
+  - name: small (80 ring) - sippy cup 75 x 150
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 80, depth: 50}}
+    at: echo:seat_center
+    object: {base_d: 75, top_d: 75, h: 150}
+    proud: [20, 120]
+  - name: small (80 ring) - widest base that sits flat, 76
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 80, depth: 50}}
+    at: echo:seat_center
+    object: {base_d: 76, top_d: 78, h: 100}
+    proud: [20, 120]
+  - name: large (108 ring) - insulated tumbler 90 x 160
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 108, depth: 65}}
+    at: echo:seat_center
+    object: {base_d: 80, top_d: 90, h: 160}
+    proud: [20, 120]
+  - name: large (108 ring) - Duralex Picardie 310 ml
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 108, depth: 65}}
+    at: echo:seat_center
+    object: {base_d: 65, top_d: 90, h: 94}
+    proud: [20, 120]
+  - name: large (108 ring) - widest that fits, 104
+    part: {scad: cup-holder.scad, part: holder, define: {cup_id: 108, depth: 65}}
+    at: echo:seat_center
+    object: {base_d: 104, top_d: 104, h: 120}
+    proud: [20, 120]
+
+printability:
+  - {name: hook clip as printed, part: {scad: clip.scad, define: {catch: hook}}, max_ledge_mm: 2.2}  # 2 mm hook lip, owner's pick 2026-11-16
+  - {name: clip, part: {scad: clip.scad, part: clip, define: {catch: none}}}
+  # test clips: their lips print over slicer tree supports, so the ledge warning is expected
+  - {name: 4 mm hook clip (supported), part: {scad: clip.scad, define: {catch: hook, catch_reach: 4}}, max_ledge_mm: 5}
+  - {name: middle-bar clip (supported), part: {scad: clip.scad, define: {mount: middle}}, max_ledge_mm: 45}
+  - {name: mid-bottom clip (supported), part: {scad: clip.scad, define: {mount: mid-bottom}}, max_ledge_mm: 45}
+  - {name: j clip (supported), part: {scad: clip.scad, define: {catch: j}}, max_ledge_mm: 45}  # the nub tip is a floating flat face until supports hold it
+  - {name: cup holder, part: {scad: cup-holder.scad, part: holder}}
+  - {name: cubby, part: {scad: cubby.scad, part: cubby}}
+  - {name: tissue tray, part: {scad: tissue-holder.scad, part: holder}}
+  - {name: j clip doubled nub (supported), part: {scad: clip.scad, define: {catch: j, nub_h: 4}}, max_ledge_mm: 45}
+  - {name: book holder, part: {scad: book-holder.scad, part: holder}}
+  - {name: flat book holder, part: {scad: book-holder.scad, part: holder, define: {layout: flat}}}
+  - {name: small storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: small}}}
+  - {name: large storage tray, part: {scad: storage-tray.scad, part: tray, define: {size: large}}}
+  - {name: small storage tray feature layout, part: {scad: storage-tray.scad, part: tray, define: {size: small, style: feature}}}
+  - {name: large storage tray feature layout, part: {scad: storage-tray.scad, part: tray, define: {size: large, style: feature}}}
+  - {name: large storage tray drawn layout, part: {scad: storage-tray.scad, part: tray, define: {size: large, style: lines, lines: [[100, 0, 100, 77.6], [100, 25, 168.2, 25], [100, 52, 168.2, 52]]}}}
+  - {name: dovetail fit test, part: {scad: dovetail-fit-test.scad, part: both}, bodies: 2}
+  - {name: small cup holder, part: {scad: cup-holder.scad, part: holder, define: {cup_id: 80, depth: 50}}}
+  - {name: large cup holder, part: {scad: cup-holder.scad, part: holder, define: {cup_id: 108, depth: 65}}}
+  - {name: cone floor cup holder, part: {scad: cup-holder.scad, part: holder, define: {floor: cone}}}
+  - {name: deep cup holder with handle slots, part: {scad: cup-holder.scad, part: holder, define: {depth: 75, slots: both}}}
+  - {name: shallowest slotted cup holder, part: {scad: cup-holder.scad, part: holder, define: {depth: 45, slots: both}}}

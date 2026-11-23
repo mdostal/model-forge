@@ -1,0 +1,77 @@
+// Bunk tissue box holder: an open-top tray that slides onto rail clips
+// (clip.scad), lowered on from above, and holds a flat tissue box lying down, long side along the
+// rail, so tissues pull from its top. A hole in the floor lets you push
+// the box up to swap it.
+//
+// Box defaults are the Costco Kleenex Trusted Care flat box (230 ct,
+// Costco item 723675). Kleenex lists the 200-230 ct flat box at
+// 8.875 x 4.75 x 4.625 in; Target's listing says 9.00 long. The larger
+// of each is used here. Measure yours and change the Box values if needed.
+//
+// Print upright as modeled, no supports: the floor sits on the bed and
+// the windows have 45 deg pointed tops.
+
+use <rail-clip.scad>
+
+/* [Box, measure yours] */
+box_l = 228.6;    // 9.00 in, along the rail
+box_w = 120.7;    // 4.75 in, away from the rail
+box_h = 117.5;    // 4.625 in
+box_clear = 3;    // added to length and width
+hold = 0.6;       // fraction of the box height the tray walls cover
+
+/* [Tray] */
+tray_wall = 2;
+floor_t = 2.4;
+ledge = 16;       // floor rim the box sits on; the middle is open
+windows = true;
+clips = 2;        // 1 or 2 rail clips
+clip_pitch = 140; // clip spacing when using 2; must miss the bed's posts
+
+/* [Fit] */
+dt_clear = 0.25;
+
+part = "holder"; // [holder, assembly, rails, clips, mounted]
+
+/* [Hidden] */
+eps = 0.01;
+
+il = box_l + box_clear;
+iw = box_w + box_clear;
+ol = il + 2 * tray_wall;
+y0 = dt_block_d(dt_clear) - eps;
+ow = iw + 2 * tray_wall;
+th = floor_t + box_h * hold;             // tray height
+bot = dt_roof() - th;                    // tray top flush with the socket roof
+xs = clips >= 2 ? [-clip_pitch / 2, clip_pitch / 2] : [0];
+
+module win(w, h, len) {
+  // pointed-top window in the XZ plane, cut through len along Y
+  rotate([90, 0, 0]) translate([0, 0, -len / 2]) linear_extrude(len)
+    polygon([[-w / 2, 0], [w / 2, 0], [w / 2, h], [0, h + w / 2], [-w / 2, h]]);
+}
+
+module tray() {
+  wz = bot + floor_t + 10;
+  room = bot + th - 8 - wz;              // window height available
+  difference() {
+    translate([-ol / 2, y0, bot]) cube([ol, ow, th]);
+    translate([-il / 2, y0 + tray_wall, bot + floor_t]) cube([il, iw, th]);
+    translate([-il / 2 + ledge, y0 + tray_wall + ledge, bot - 1])
+      cube([il - 2 * ledge, iw - 2 * ledge, floor_t + 2]);
+    if (windows && room > 20) {
+      // front wall: three windows; side walls: one each
+      fw = min(50, room);
+      for (i = [-1, 0, 1]) translate([i * il / 3, y0 + ow, wz]) win(fw, room - fw / 2, 8);
+      sw = min(iw * 0.5, room);
+      for (s = [-1, 1]) translate([s * ol / 2, y0 + ow / 2, wz]) rotate([0, 0, 90])
+        win(sw, room - sw / 2, 8);
+    }
+  }
+}
+
+module holder() { with_mounts(-bot, dt_clear, xs) tray(); }
+
+if (part == "assembly") bunk_assembly(xs) holder();
+else if (part == "holder") holder();
+else bunk_piece(part, xs) holder();
